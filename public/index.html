@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Recommenderz</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fafafa;color:#262626;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+    button{font-family:inherit;cursor:pointer}
+    a{text-decoration:none;color:inherit}
+
+    /* ─── TRANSITIONS ─── */
+    .tab{display:none;animation:fadeIn .25s ease}.tab.on{display:block}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes heartBurst{0%{transform:scale(0);opacity:1}50%{transform:scale(1.3)}100%{transform:scale(1);opacity:0}}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    @keyframes toastIn{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    @keyframes toastOut{from{transform:translateX(-50%) translateY(0);opacity:1}to{transform:translateX(-50%) translateY(100px);opacity:0}}
+    @keyframes spinnerRotate{to{transform:rotate(360deg)}}
+
+    /* ─── TOAST ─── */
+    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#262626;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:toastIn .3s ease;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+    .toast.out{animation:toastOut .3s ease forwards}
+
+    /* ─── SPINNER ─── */
+    .spinner{width:24px;height:24px;border:2px solid #dbdbdb;border-top-color:#262626;border-radius:50%;animation:spinnerRotate .6s linear infinite;margin:20px auto}
+    .spinner-sm{width:16px;height:16px;border-width:2px}
+
+    /* ─── SKELETON ─── */
+    .skeleton{background:linear-gradient(90deg,#efefef 25%,#dbdbdb 50%,#efefef 75%);background-size:800px 100%;animation:shimmer 1.5s infinite linear;border-radius:4px}
+    .skeleton-circle{border-radius:50%}
+    .skeleton-post{padding:12px;margin-bottom:12px}
+    .skeleton-post .sk-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .skeleton-post .sk-ava{width:32px;height:32px;border-radius:50%}
+    .skeleton-post .sk-name{width:120px;height:12px;border-radius:4px}
+    .skeleton-post .sk-media{width:100%;aspect-ratio:16/9;border-radius:4px}
+    .skeleton-post .sk-text{width:200px;height:12px;border-radius:4px;margin-top:12px}
+
+    /* ─── HEART OVERLAY ─── */
+    .heart-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
+    .heart-overlay svg{animation:heartBurst .8s ease forwards;color:#ed4956;filter:drop-shadow(0 0 8px rgba(237,73,86,.5))}
+
+    /* ─── AUTH ─── */
+    .auth-wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#fafafa}
+    .auth-box{width:350px;background:#fff;border:1px solid #dbdbdb;padding:40px;display:flex;flex-direction:column;align-items:center;border-radius:4px}
+    @media(max-width:450px){.auth-box{border:none;background:#fafafa;width:100%;padding:40px 32px}}
+    .auth-logo{font-size:36px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;margin-bottom:32px;color:#262626}
+    .auth-input{width:100%;background:#fafafa;border:1px solid #dbdbdb;border-radius:3px;padding:9px 8px;font-size:12px;color:#262626;outline:none;margin-bottom:6px}
+    .auth-input:focus{border-color:#a8a8a8}
+    .auth-input::placeholder{color:#8e8e8e;font-size:12px}
+    .auth-btn{width:100%;background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:8px 16px;margin-top:8px;transition:opacity .15s}
+    .auth-btn:hover{opacity:.85}
+    .auth-btn:active{opacity:.7}
+    .auth-btn:disabled{opacity:.3}
+    .auth-sep{display:flex;align-items:center;gap:16px;width:100%;margin:18px 0}
+    .auth-sep-line{flex:1;height:1px;background:#dbdbdb}
+    .auth-sep-text{color:#8e8e8e;font-size:13px;font-weight:600}
+    .auth-google{display:flex;align-items:center;justify-content:center;gap:8px;background:none;border:none;color:#385898;font-size:14px;font-weight:600;padding:8px;width:100%;transition:opacity .15s}
+    .auth-google:hover{opacity:.8}
+    .auth-google:active{opacity:.6}
+    .auth-footer{width:350px;background:#fff;border:1px solid #dbdbdb;padding:20px;text-align:center;margin-top:10px;font-size:14px;color:#262626;border-radius:4px}
+    @media(max-width:450px){.auth-footer{border:none;background:transparent;width:100%}}
+    .auth-footer span{color:#0095f6;font-weight:600;cursor:pointer}
+    .auth-phone-link{color:#00376b;font-size:12px;margin-top:16px;background:none;border:none;font-family:inherit}
+
+    /* ─── USERNAME ─── */
+    .uname-wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#fafafa}
+    .uname-box{width:350px;background:#fff;border:1px solid #dbdbdb;padding:40px;display:flex;flex-direction:column;align-items:center}
+    @media(max-width:450px){.uname-box{border:none;background:#fafafa;width:100%;padding:40px 32px}}
+    .uname-box h2{font-size:16px;font-weight:400;color:#8e8e8e;text-align:center;margin-bottom:16px;line-height:1.5}
+    .uname-err{color:#ed4956;font-size:12px;margin-top:4px;min-height:18px}
+
+    /* ─── APP SHELL ─── */
+    .app{display:none;flex-direction:column;height:100dvh;background:#fff}
+
+    /* Top Nav (mobile only) */
+    .topnav{height:44px;background:#fff;border-bottom:1px solid #dbdbdb;display:flex;align-items:center;padding:0 16px;flex-shrink:0}
+    .topnav-logo{font-size:22px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;flex:1;color:#262626}
+    .topnav-right{display:flex;align-items:center;gap:20px}
+    .topnav-right button{background:none;border:none;display:flex;padding:0;position:relative}
+    .topnav-badge{position:absolute;top:-4px;right:-4px;background:#ff3040;width:8px;height:8px;border-radius:50%;border:2px solid #fff}
+
+    /* Layout */
+    .app-body{display:flex;flex:1;overflow:hidden}
+
+    /* ─── SIDEBAR (desktop) ─── */
+    .sidebar{display:none;width:73px;background:#fff;border-right:1px solid #dbdbdb;flex-direction:column;padding:8px 12px;flex-shrink:0}
+    @media(min-width:768px){
+      .sidebar{display:flex}
+      .bottomnav{display:none!important}
+      .topnav{display:none}
+    }
+    @media(min-width:1264px){
+      .sidebar{width:245px}
+      .sidebar-logo-full{display:block}
+      .sidebar-logo-icon{display:none}
+      .sidebar-item{justify-content:flex-start;gap:16px;padding:12px}
+      .sidebar-item:hover{background:#fafafa;border-radius:8px}
+      .sidebar-label{display:inline}
+    }
+    .sidebar-logo-wrap{padding:12px 12px 20px;margin-bottom:4px}
+    .sidebar-logo-full{display:none;font-size:22px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;color:#262626;padding:16px 0}
+    .sidebar-logo-icon{display:flex;justify-content:center;padding:12px 0}
+    .sidebar-item{display:flex;align-items:center;justify-content:center;padding:12px;background:none;border:none;position:relative;width:100%;color:#262626;transition:background .15s}
+    @media(max-width:1263px){.sidebar-item:hover{background:#fafafa;border-radius:8px}}
+    .sidebar-item svg{flex-shrink:0;transition:transform .1s}
+    .sidebar-item:active svg{transform:scale(.9)}
+    .sidebar-item.active svg{stroke-width:2.5}
+    .sidebar-item.active .sidebar-label{font-weight:700}
+    .sidebar-label{display:none;font-size:16px;color:#262626}
+    .sidebar-ava{width:24px;height:24px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#8e8e8e;overflow:hidden;border:2px solid transparent;flex-shrink:0}
+    .sidebar-item.active .sidebar-ava{border-color:#262626}
+    .sidebar-ava img{width:100%;height:100%;object-fit:cover}
+    .sidebar-spacer{flex:1}
+    .sidebar-badge{position:absolute;top:8px;right:8px;background:#ff3040;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+    @media(min-width:1264px){.sidebar-badge{top:8px;right:auto;left:28px}}
+
+    /* ─── MAIN CONTENT ─── */
+    .main-area{flex:1;overflow-y:auto;scrollbar-width:none;background:#fafafa}
+    .main-area::-webkit-scrollbar{display:none}
+
+    /* Pull to refresh */
+    .ptr-indicator{text-align:center;padding:12px;color:#8e8e8e;font-size:12px;display:none}
+
+    /* Feed layout */
+    .feed-layout{display:flex;justify-content:center;padding:0}
+    .feed-col{width:100%;max-width:470px;padding:0}
+    .right-sidebar{display:none;width:320px;padding:36px 0 0 64px;flex-shrink:0}
+    @media(min-width:1024px){.right-sidebar{display:block}}
+
+    /* Right sidebar content */
+    .rs-user{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+    .rs-ava{width:44px;height:44px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#8e8e8e;flex-shrink:0;overflow:hidden}
+    .rs-ava img{width:100%;height:100%;object-fit:cover}
+    .rs-info{flex:1;min-width:0}
+    .rs-uname{font-size:14px;font-weight:600;color:#262626;cursor:pointer}
+    .rs-uname:hover{text-decoration:underline}
+    .rs-name{font-size:14px;color:#8e8e8e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rs-switch{background:none;border:none;color:#0095f6;font-size:12px;font-weight:600;flex-shrink:0;transition:opacity .15s}
+    .rs-switch:hover{opacity:.7}
+    .rs-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .rs-head-title{font-size:14px;font-weight:600;color:#8e8e8e}
+    .rs-head-link{font-size:12px;font-weight:600;color:#262626;background:none;border:none}
+    .rs-suggestion{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .rs-sug-ava{width:32px;height:32px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#8e8e8e;flex-shrink:0;overflow:hidden;cursor:pointer;transition:opacity .15s}
+    .rs-sug-ava:hover{opacity:.8}
+    .rs-sug-ava img{width:100%;height:100%;object-fit:cover}
+    .rs-sug-info{flex:1;min-width:0;cursor:pointer}
+    .rs-sug-uname{font-size:14px;font-weight:600;color:#262626}
+    .rs-sug-detail{font-size:12px;color:#8e8e8e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rs-follow-btn{background:none;border:none;color:#0095f6;font-size:12px;font-weight:600;flex-shrink:0;transition:opacity .15s}
+    .rs-follow-btn:hover{opacity:.7}
+    .rs-follow-btn:active{opacity:.6}
+    .rs-footer{margin-top:24px;font-size:12px;color:#c7c7c7;line-height:1.8}
+    .rs-footer span{margin-right:4px}
+
+    /* ─── STORIES ─── */
+    .stories{display:flex;gap:0;padding:16px 12px 12px;overflow-x:auto;scrollbar-width:none;background:#fff;border:1px solid #dbdbdb;border-radius:8px;margin:16px 0 24px}
+    .stories::-webkit-scrollbar{display:none}
+    @media(max-width:470px){.stories{border-radius:0;border-left:none;border-right:none;margin:0 0 8px;border-color:#dbdbdb}}
+    .story{display:flex;flex-direction:column;align-items:center;min-width:66px;width:66px;cursor:pointer;gap:4px}
+    .story-ring{width:56px;height:56px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);transition:transform .15s}
+    .story:hover .story-ring{transform:scale(1.05)}
+    .story-ring.empty{background:#dbdbdb;padding:3px}
+    .story-ava{width:100%;height:100%;border-radius:50%;border:3px solid #fff;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;color:#8e8e8e;overflow:hidden}
+    .story-ava img{width:100%;height:100%;object-fit:cover}
+    .story-name{font-size:12px;color:#262626;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+    .story-yours{position:relative}
+    .story-yours .story-ring{background:#dbdbdb}
+    .story-yours .story-plus{position:absolute;bottom:14px;right:8px;width:18px;height:18px;background:#0095f6;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+    .story-yours .story-plus svg{color:#fff}
+
+    /* ─── FEED POST ─── */
+    .post{background:#fff;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:12px;padding-bottom:12px}
+    @media(max-width:470px){.post{border-radius:0;border-left:none;border-right:none}}
+    .post-head{display:flex;align-items:center;padding:10px 12px;gap:10px}
+    .post-ava-ring{width:32px;height:32px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);flex-shrink:0;cursor:pointer;transition:transform .15s}
+    .post-ava-ring:hover{transform:scale(1.05)}
+    .post-ava{width:100%;height:100%;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#8e8e8e;border:2px solid #fff;overflow:hidden}
+    .post-ava img{width:100%;height:100%;object-fit:cover}
+    .post-user{font-size:14px;font-weight:600;flex:1;color:#262626;cursor:pointer}
+    .post-user:hover{text-decoration:underline}
+    .post-dot{background:none;border:none;color:#262626;padding:4px;font-size:16px;letter-spacing:2px}
+    .post-media{width:100%;aspect-ratio:16/9;background:#efefef;position:relative;-webkit-user-select:none;user-select:none}
+    .post-media iframe{width:100%;height:100%;border:none}
+    .post-actions{display:flex;align-items:center;padding:4px 12px}
+    .post-actions button{background:none;border:none;padding:8px;display:flex;transition:transform .15s}
+    .post-actions button:hover{opacity:.7}
+    .post-actions button:active{opacity:.5;transform:scale(.9)}
+    .post-actions button svg{color:#262626}
+    .post-actions button.liked svg{color:#ed4956;fill:#ed4956}
+    .post-actions .right{margin-left:auto}
+    .post-meta{padding:0 12px 4px}
+    .post-likes{font-size:14px;font-weight:600;color:#262626;margin-bottom:4px}
+    .post-meta .caption{font-size:14px;color:#262626;line-height:1.4}
+    .post-meta .caption b{font-weight:600;cursor:pointer}
+    .post-meta .caption b:hover{text-decoration:underline}
+    .post-meta .caption-text{display:inline}
+    .post-meta .caption-more{color:#8e8e8e;cursor:pointer;background:none;border:none;font-family:inherit;font-size:14px;padding:0}
+    .post-meta .time{font-size:10px;color:#8e8e8e;text-transform:uppercase;letter-spacing:.2px;margin-top:6px}
+
+    /* Feed empty */
+    .feed-empty{display:flex;flex-direction:column;align-items:center;padding:80px 40px;text-align:center}
+    .feed-empty h3{font-size:22px;font-weight:300;margin-bottom:8px;color:#262626}
+    .feed-empty p{font-size:14px;color:#8e8e8e;line-height:1.5}
+    .feed-empty-icon{width:80px;height:80px;margin-bottom:20px}
+
+    /* ─── EXPLORE/SEARCH ─── */
+    .search-wrap{padding:8px 16px;position:sticky;top:0;background:#fafafa;z-index:2}
+    .search-box{width:100%;background:#efefef;border:none;border-radius:8px;padding:10px 16px 10px 36px;font-size:16px;color:#262626;outline:none;transition:background .15s}
+    .search-box:focus{background:#dbdbdb}
+    .search-box::placeholder{color:#8e8e8e}
+    .search-wrap-inner{position:relative}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8e8e8e;pointer-events:none}
+    .user-row{display:flex;align-items:center;padding:8px 16px;gap:12px;cursor:pointer;transition:background .15s}
+    .user-row:hover{background:#fafafa}
+    .user-row:active{background:#efefef}
+    .user-row-ava{width:44px;height:44px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:17px;color:#8e8e8e;flex-shrink:0;overflow:hidden}
+    .user-row-ava img{width:100%;height:100%;object-fit:cover}
+    .user-row-info{flex:1;min-width:0}
+    .user-row-name{font-size:14px;font-weight:600;color:#262626}
+    .user-row-full{font-size:14px;color:#8e8e8e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .follow-btn{background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 20px;flex-shrink:0;transition:opacity .15s}
+    .follow-btn:hover{opacity:.85}
+    .follow-btn:active{opacity:.7}
+    .follow-btn.on{background:#efefef;color:#262626}
+
+    /* ─── EXPLORE GRID ─── */
+    .explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px}
+    .explore-grid-item{position:relative;cursor:pointer;overflow:hidden;aspect-ratio:1;background:#efefef}
+    .explore-grid-item.large{grid-column:span 2;grid-row:span 2}
+    .explore-grid-item img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+    .explore-grid-item:hover img{transform:scale(1.05)}
+    .explore-grid-item .explore-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background .2s;display:flex;align-items:center;justify-content:center}
+    .explore-grid-item:hover .explore-overlay{background:rgba(0,0,0,.3)}
+    .explore-grid-item .explore-play{opacity:0;transition:opacity .2s;color:#fff;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+    .explore-grid-item:hover .explore-play{opacity:1}
+    .explore-grid-item .explore-user{position:absolute;bottom:8px;left:8px;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);opacity:0;transition:opacity .2s}
+    .explore-grid-item:hover .explore-user{opacity:1}
+
+    /* ─── NOTIFICATIONS/ACTIVITY ─── */
+    .activity-header{padding:16px;font-size:16px;font-weight:600;color:#262626;border-bottom:1px solid #dbdbdb}
+    .activity-section{padding:12px 16px 4px}
+    .activity-section-title{font-size:14px;font-weight:600;color:#262626;margin-bottom:12px}
+    .activity-item{display:flex;align-items:center;gap:12px;padding:8px 0;cursor:pointer}
+    .activity-ava{width:44px;height:44px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:17px;color:#8e8e8e;flex-shrink:0;overflow:hidden}
+    .activity-ava img{width:100%;height:100%;object-fit:cover}
+    .activity-text{flex:1;font-size:14px;color:#262626;line-height:1.4}
+    .activity-text b{font-weight:600}
+    .activity-text .activity-time{color:#8e8e8e}
+    .activity-thumb{width:44px;height:44px;border-radius:4px;overflow:hidden;flex-shrink:0;background:#efefef}
+    .activity-thumb img{width:100%;height:100%;object-fit:cover}
+    .activity-follow-btn{background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 20px;flex-shrink:0}
+    .activity-follow-btn.on{background:#efefef;color:#262626}
+    .activity-empty{display:flex;flex-direction:column;align-items:center;padding:80px 40px;text-align:center}
+    .activity-empty-icon{width:62px;height:62px;border-radius:50%;border:2px solid #262626;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+    .activity-empty h3{font-size:22px;font-weight:300;margin-bottom:8px;color:#262626}
+    .activity-empty p{font-size:14px;color:#8e8e8e}
+
+    /* ─── CREATE MODAL ─── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center}
+    .modal-bg.open{display:flex}
+    .modal{background:#fff;border-radius:12px;width:calc(100% - 64px);max-width:530px;overflow:hidden}
+    .modal-head{display:flex;align-items:center;justify-content:center;padding:12px 16px;border-bottom:1px solid #dbdbdb;position:relative}
+    .modal-head h3{font-size:16px;font-weight:600;color:#262626}
+    .modal-head .share-action{position:absolute;right:16px;background:none;border:none;color:#0095f6;font-size:14px;font-weight:600;transition:opacity .15s}
+    .modal-head .share-action:disabled{opacity:.3}
+    .modal-body{min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 32px}
+    .modal-body .icon-art{margin-bottom:16px}
+    .modal-body .icon-art svg{color:#262626}
+    .modal-body .modal-prompt{font-size:20px;font-weight:300;color:#262626;margin-bottom:20px}
+    .modal-body .create-input{width:100%;background:#fafafa;border:1px solid #dbdbdb;border-radius:8px;padding:12px 16px;font-size:14px;color:#262626;outline:none;transition:border-color .15s}
+    .modal-body .create-input::placeholder{color:#8e8e8e}
+    .modal-body .create-input:focus{border-color:#a8a8a8}
+    .modal-preview{width:100%;aspect-ratio:16/9;background:#efefef;border-radius:4px;overflow:hidden;margin-top:12px;display:none}
+    .modal-preview iframe{width:100%;height:100%;border:none}
+    .share-status{text-align:center;font-size:14px;color:#58c322;margin-top:8px;min-height:21px}
+
+    /* ─── BOTTOM NAV (mobile) ─── */
+    .bottomnav{display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid #dbdbdb;padding:4px 0;padding-bottom:calc(4px + env(safe-area-inset-bottom));flex-shrink:0}
+    .bottomnav button{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0;background:none;border:none;position:relative}
+    .bottomnav button svg{color:#262626;transition:transform .1s}
+    .bottomnav button:active svg{transform:scale(.9)}
+    .bottomnav button.active svg{stroke-width:2.5}
+    .bottomnav .bnav-ava{width:24px;height:24px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8e8e8e;overflow:hidden;border:2px solid transparent}
+    .bottomnav .active .bnav-ava{border-color:#262626}
+    .bottomnav .bnav-ava img{width:100%;height:100%;object-fit:cover}
+    .bottomnav .bnav-badge{position:absolute;top:4px;right:50%;margin-right:-14px;background:#ff3040;width:6px;height:6px;border-radius:50%}
+
+    /* ─── PROFILE ─── */
+    .profile-header{display:flex;padding:16px 28px 16px 16px;gap:28px;align-items:flex-start}
+    @media(min-width:768px){.profile-header{padding:30px 16px;gap:80px;justify-content:center;max-width:935px;margin:0 auto}}
+    .profile-ava-wrap{flex-shrink:0}
+    .profile-ava-ring{width:83px;height:83px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+    @media(min-width:768px){.profile-ava-ring{width:156px;height:156px}}
+    .profile-ava{width:100%;height:100%;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px;color:#8e8e8e;overflow:hidden;border:3px solid #fff}
+    @media(min-width:768px){.profile-ava{font-size:56px}}
+    .profile-ava img{width:100%;height:100%;object-fit:cover}
+    .profile-info{flex:1;min-width:0;max-width:612px}
+    .profile-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .profile-uname{font-size:20px;font-weight:400;color:#262626}
+    .profile-edit-btn{background:#efefef;border:none;border-radius:8px;color:#262626;font-size:14px;font-weight:600;padding:7px 16px;cursor:pointer;transition:background .15s}
+    .profile-edit-btn:hover{background:#dbdbdb}
+    .profile-edit-btn:active{opacity:.7}
+    .profile-share-btn{background:#efefef;border:none;border-radius:8px;color:#262626;font-size:14px;font-weight:600;padding:7px 16px;cursor:pointer;transition:background .15s}
+    .profile-share-btn:hover{background:#dbdbdb}
+    .profile-share-btn:active{opacity:.7}
+    .profile-settings-btn{background:none;border:none;color:#262626;padding:4px;cursor:pointer;display:flex}
+    .profile-follow-btn{background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 24px;cursor:pointer;transition:opacity .15s}
+    .profile-follow-btn:hover{opacity:.85}
+    .profile-follow-btn:active{opacity:.7}
+    .profile-follow-btn.following{background:#efefef;color:#262626}
+    .profile-stats{display:flex;gap:0;margin-bottom:16px}
+    .profile-stat{font-size:16px;color:#262626;margin-right:40px;cursor:pointer;transition:opacity .15s}
+    .profile-stat:hover{opacity:.7}
+    .profile-stat b{font-weight:600}
+    @media(max-width:767px){
+      .profile-stats{border-top:1px solid #dbdbdb;border-bottom:1px solid #dbdbdb;margin:12px -16px;padding:12px 0;justify-content:space-around;gap:0}
+      .profile-stat{margin-right:0;text-align:center;font-size:14px}
+      .profile-stat b{display:block}
+    }
+    .profile-name{font-size:14px;font-weight:600;color:#262626;line-height:1.4}
+    .profile-bio{font-size:14px;color:#262626;line-height:1.4}
+    .profile-website{font-size:14px;line-height:1.4}
+    .profile-website a{color:#00376b;font-weight:600}
+    .profile-mutual{font-size:12px;color:#8e8e8e;margin-top:4px}
+    .profile-mutual b{font-weight:600;color:#262626}
+
+    /* Highlights */
+    .profile-highlights{display:flex;gap:16px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none}
+    .profile-highlights::-webkit-scrollbar{display:none}
+    @media(min-width:768px){.profile-highlights{justify-content:flex-start;max-width:935px;margin:0 auto;padding:0 16px 24px}}
+    .highlight-item{display:flex;flex-direction:column;align-items:center;min-width:64px;gap:4px;cursor:pointer}
+    .highlight-circle{width:64px;height:64px;border-radius:50%;border:1px solid #dbdbdb;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .15s}
+    .highlight-circle:hover{border-color:#8e8e8e}
+    @media(min-width:768px){.highlight-circle{width:77px;height:77px}}
+    .highlight-circle svg{color:#8e8e8e}
+    .highlight-name{font-size:12px;color:#262626;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-weight:400}
+
+    /* Profile tabs */
+    .profile-tabs{display:flex;border-top:1px solid #dbdbdb;justify-content:center;max-width:935px;margin:0 auto}
+    .profile-tab{flex:1;max-width:200px;padding:16px 0;display:flex;align-items:center;justify-content:center;background:none;border:none;border-top:1px solid transparent;margin-top:-1px;color:#8e8e8e;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;gap:6px;cursor:pointer;transition:color .15s}
+    .profile-tab:hover{color:#262626}
+    .profile-tab.active{color:#262626;border-top-color:#262626}
+    .profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-width:935px;margin:0 auto;padding:3px 0}
+    .profile-grid-item{aspect-ratio:1;background:#efefef;position:relative;cursor:pointer;overflow:hidden}
+    .profile-grid-item img{width:100%;height:100%;object-fit:cover;transition:opacity .15s}
+    .profile-grid-item:hover img{opacity:.8}
+    .profile-grid-item:hover .grid-overlay{opacity:1}
+    .grid-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+    .grid-play{color:#fff}
+    .profile-empty{display:flex;flex-direction:column;align-items:center;padding:60px 40px;text-align:center}
+    .profile-empty-icon{width:62px;height:62px;border-radius:50%;border:2px solid #262626;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+    .profile-empty h3{font-size:26px;font-weight:800;margin-bottom:8px;color:#262626}
+    .profile-empty p{font-size:14px;color:#8e8e8e}
+
+    /* ─── EDIT PROFILE MODAL ─── */
+    .edit-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center}
+    .edit-modal-bg.open{display:flex}
+    .edit-modal{background:#fff;border-radius:12px;width:calc(100% - 64px);max-width:420px;overflow:hidden}
+    .edit-modal-head{display:flex;align-items:center;justify-content:center;padding:12px 16px;border-bottom:1px solid #dbdbdb;position:relative}
+    .edit-modal-head h3{font-size:16px;font-weight:600;color:#262626}
+    .edit-modal-head .edit-cancel{position:absolute;left:16px;background:none;border:none;color:#262626;font-size:14px;cursor:pointer}
+    .edit-modal-head .edit-save{position:absolute;right:16px;background:none;border:none;color:#0095f6;font-size:14px;font-weight:600;cursor:pointer}
+    .edit-modal-head .edit-save:disabled{opacity:.3}
+    .edit-modal-body{padding:24px 32px;display:flex;flex-direction:column;gap:16px}
+    .edit-field label{font-size:12px;font-weight:600;color:#8e8e8e;display:block;margin-bottom:4px}
+    .edit-field input,.edit-field textarea{width:100%;background:#fafafa;border:1px solid #dbdbdb;border-radius:6px;padding:10px 12px;font-size:14px;font-family:inherit;color:#262626;outline:none;resize:none;transition:border-color .15s}
+    .edit-field input:focus,.edit-field textarea:focus{border-color:#a8a8a8}
+
+    /* ─── SETTINGS MENU ─── */
+    .settings-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:flex-end;justify-content:center}
+    .settings-bg.open{display:flex}
+    @media(min-width:768px){.settings-bg.open{align-items:center}}
+    .settings-menu{background:#fff;border-radius:12px 12px 0 0;width:100%;max-width:400px;overflow:hidden;animation:slideUp .2s}
+    @media(min-width:768px){.settings-menu{border-radius:12px}}
+    .settings-item{display:flex;align-items:center;gap:12px;padding:14px 20px;border:none;background:none;width:100%;font-size:14px;color:#262626;border-bottom:1px solid #dbdbdb;cursor:pointer;font-family:inherit;transition:background .15s}
+    .settings-item:last-child{border-bottom:none}
+    .settings-item:hover{background:#fafafa}
+    .settings-item:active{background:#efefef}
+    .settings-item.danger{color:#ed4956}
+    .settings-handle{width:40px;height:4px;background:#dbdbdb;border-radius:2px;margin:8px auto}
+    @media(min-width:768px){.settings-handle{display:none}}
+  </style>
+</head>
+<body>
+
+<!-- AUTH -->
+<!-- LOADING SPLASH -->
+<div id="scr-loading" style="min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#fafafa">
+  <div style="text-align:center">
+    <div style="font-size:36px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;color:#262626;margin-bottom:16px">Recommenderz</div>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<div id="scr-auth" class="auth-wrap" style="display:none">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="auth-box">
+      <div class="auth-logo">Recommenderz</div>
+      <button onclick="signInWithGoogle()" class="auth-google">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Log in with Google
+      </button>
+      <div class="auth-sep"><div class="auth-sep-line"></div><div class="auth-sep-text">OR</div><div class="auth-sep-line"></div></div>
+      <input type="tel" id="phone-number" class="auth-input" placeholder="Phone number" style="display:none">
+      <input type="text" id="otp-code" class="auth-input" placeholder="Confirmation code" style="display:none">
+      <button id="send-otp-btn" onclick="sendOTP()" class="auth-btn" style="display:none">Next</button>
+      <button id="verify-btn" onclick="verifyOTP()" class="auth-btn" style="display:none">Confirm</button>
+      <button id="phone-toggle" onclick="showPhoneInput()" class="auth-phone-link">Log in with phone number</button>
+      <div id="recaptcha-container"></div>
+    </div>
+    <div class="auth-footer">Don't have an account? <span onclick="signInWithGoogle()">Sign up</span></div>
+  </div>
+</div>
+
+<!-- USERNAME -->
+<div id="scr-uname" class="uname-wrap" style="display:none">
+  <div class="uname-box">
+    <div class="auth-logo">Recommenderz</div>
+    <h2>Choose a username to get started. You can always change it later.</h2>
+    <input type="text" id="username-input" class="auth-input" placeholder="Username" maxlength="20" style="margin-top:16px">
+    <div class="uname-err" id="username-error"></div>
+    <button onclick="saveUsername()" class="auth-btn" style="margin-top:12px">Next</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="scr-app" class="app">
+  <!-- Top nav mobile -->
+  <div class="topnav">
+    <div class="topnav-logo">Recommenderz</div>
+    <div class="topnav-right">
+      <button onclick="goTab('activity')">
+        <svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <div class="topnav-badge" id="topnav-activity-badge" style="display:none"></div>
+      </button>
+      <button><svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- Sidebar desktop -->
+    <div class="sidebar">
+      <div class="sidebar-logo-wrap">
+        <div class="sidebar-logo-full">Recommenderz</div>
+        <div class="sidebar-logo-icon"><svg width="24" height="24" fill="none" stroke="#262626" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="#262626" stroke="none"/></svg></div>
+      </div>
+      <!-- Home -->
+      <button onclick="goTab('feed')" class="sidebar-item active" data-tab="feed">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="sidebar-label">Home</span>
+      </button>
+      <!-- Search -->
+      <button onclick="goTab('explore')" class="sidebar-item" data-tab="explore">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="sidebar-label">Search</span>
+      </button>
+      <!-- Explore -->
+      <button onclick="goTab('explore')" class="sidebar-item">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        <span class="sidebar-label">Explore</span>
+      </button>
+      <!-- Reels -->
+      <button onclick="goTab('feed')" class="sidebar-item">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 2l4 7h-4l4 7"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
+        <span class="sidebar-label">Reels</span>
+      </button>
+      <!-- Notifications -->
+      <button onclick="goTab('activity')" class="sidebar-item" data-tab="activity">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span class="sidebar-label">Notifications</span>
+      </button>
+      <!-- Create -->
+      <button onclick="openCreate()" class="sidebar-item">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span class="sidebar-label">Create</span>
+      </button>
+      <!-- Profile -->
+      <button onclick="viewProfile(currentUsername)" class="sidebar-item" data-tab="profile">
+        <div class="sidebar-ava" id="sidebar-ava"></div>
+        <span class="sidebar-label">Profile</span>
+      </button>
+
+      <div class="sidebar-spacer"></div>
+
+      <!-- More -->
+      <button onclick="openSettings()" class="sidebar-item">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <span class="sidebar-label">More</span>
+      </button>
+    </div>
+
+    <!-- Main -->
+    <div class="main-area" id="main-area">
+      <!-- FEED TAB -->
+      <div id="tab-feed" class="tab on">
+        <div class="ptr-indicator" id="ptr-indicator">Pull to refresh</div>
+        <div class="feed-layout">
+          <div class="feed-col">
+            <div id="stories-bar" class="stories"></div>
+            <div id="feed-list"></div>
+          </div>
+          <div class="right-sidebar" id="right-sidebar"></div>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div id="tab-profile" class="tab">
+        <div id="profile-content"></div>
+      </div>
+
+      <!-- EXPLORE TAB -->
+      <div id="tab-explore" class="tab">
+        <div style="max-width:600px;margin:0 auto">
+          <div class="search-wrap">
+            <div class="search-wrap-inner">
+              <svg class="search-icon" width="16" height="16" fill="none" stroke="#8e8e8e" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="user-search" class="search-box" placeholder="Search" oninput="searchUsers()">
+            </div>
+          </div>
+          <div id="user-results"></div>
+          <div id="explore-grid-container"></div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY TAB -->
+      <div id="tab-activity" class="tab">
+        <div style="max-width:600px;margin:0 auto">
+          <div class="activity-header">Notifications</div>
+          <div id="activity-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav mobile -->
+  <div class="bottomnav">
+    <button onclick="goTab('feed')" class="active" data-tab="feed"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
+    <button onclick="goTab('explore')" data-tab="explore"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+    <button onclick="openCreate()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></button>
+    <button onclick="goTab('activity')" data-tab="activity">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    </button>
+    <button onclick="viewProfile(currentUsername)" data-tab="profile"><div class="bnav-ava" id="bnav-ava"></div></button>
+  </div>
+</div>
+
+<!-- CREATE MODAL -->
+<div id="create-modal" class="modal-bg" onclick="if(event.target===this)closeCreate()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Create new post</h3>
+      <button class="share-action" id="modal-share-btn" onclick="recommend()" disabled>Share</button>
+    </div>
+    <div class="modal-body">
+      <div class="icon-art" id="modal-icon">
+        <svg width="72" height="72" fill="none" stroke="#262626" stroke-width="1" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 2v20M16 2v20M2 8h20M2 16h20"/><polygon points="10 9 15 12 10 15" fill="#262626" stroke="none"/></svg>
+      </div>
+      <p class="modal-prompt" id="modal-prompt">Paste a YouTube link</p>
+      <input type="text" id="yt-link" class="create-input" placeholder="https://youtube.com/watch?v=..." oninput="onYTInput()">
+      <div class="modal-preview" id="video-preview"><iframe id="yt-iframe" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
+      <div class="share-status" id="recommend-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div id="edit-modal" class="edit-modal-bg" onclick="if(event.target===this)closeEditProfile()">
+  <div class="edit-modal">
+    <div class="edit-modal-head">
+      <button class="edit-cancel" onclick="closeEditProfile()">Cancel</button>
+      <h3>Edit profile</h3>
+      <button class="edit-save" id="edit-save-btn" onclick="saveProfile()">Done</button>
+    </div>
+    <div class="edit-modal-body">
+      <div class="edit-field"><label>Name</label><input type="text" id="edit-name" maxlength="40" placeholder="Name"></div>
+      <div class="edit-field"><label>Bio</label><textarea id="edit-bio" rows="3" maxlength="150" placeholder="Bio"></textarea></div>
+      <div class="edit-field"><label>Website</label><input type="url" id="edit-website" placeholder="Website"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MENU -->
+<div id="settings-modal" class="settings-bg" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-menu">
+    <div class="settings-handle"></div>
+    <button class="settings-item" onclick="viewProfile(currentUsername);closeSettings()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </button>
+    <button class="settings-item" onclick="viewProfile(currentUsername);closeSettings()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      Saved
+    </button>
+    <button class="settings-item danger" onclick="logout();closeSettings()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Log out
+    </button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, getDocs, arrayUnion, arrayRemove, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+  import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-messaging.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyBdOqNXVd3wG3SDz0RWlMr7_udFgMKn6KQ",
+    authDomain: "recommenderz-app.firebaseapp.com",
+    projectId: "recommenderz-app",
+    storageBucket: "recommenderz-app.firebasestorage.app",
+    messagingSenderId: "931987951306",
+    appId: "1:931987951306:web:b1c1b853eee851e4c52e33",
+    databaseURL: "https://recommenderz-app-default-rtdb.asia-southeast1.firebasedatabase.app"
+  });
+  const auth = getAuth(app), db = getFirestore(app), rtdb = getDatabase(app);
+  let messaging = null;
+  try { messaging = getMessaging(app); } catch(e) {}
+  let currentUser = null, currentPhotoURL = '', confirmationResult = null;
+  window.currentUsername = null;
+
+  // User photo cache to avoid repeated lookups
+  const userPhotoCache = {};
+  async function getUserPhoto(username) {
+    if (userPhotoCache[username] !== undefined) return userPhotoCache[username];
+    try {
+      const q = query(collection(db, 'Users'), where('username', '==', username), limit(1));
+      const s = await getDocs(q);
+      if (!s.empty) {
+        const data = s.docs[0].data();
+        userPhotoCache[username] = data.photoURL || '';
+        return userPhotoCache[username];
+      }
+    } catch(e) {}
+    userPhotoCache[username] = '';
+    return '';
+  }
+
+  // Likes stored locally (in-memory for now, could be extended to Firestore)
+  const likedPosts = new Set();
+
+  function setAvatars() {
+    const initial = currentUsername ? currentUsername[0].toUpperCase() : '?';
+    const html = currentPhotoURL ? `<img src="${currentPhotoURL}" alt="">` : initial;
+    const sa = document.getElementById('sidebar-ava');
+    const ba = document.getElementById('bnav-ava');
+    if (sa) sa.innerHTML = html;
+    if (ba) ba.innerHTML = html;
+  }
+
+  // Toast notification system
+  function showToast(message) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = message;
+    document.body.appendChild(t);
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 2500);
+  }
+
+  // Feed skeleton loader
+  function showFeedSkeleton() {
+    const el = document.getElementById('feed-list');
+    let html = '';
+    for (let i = 0; i < 3; i++) {
+      html += `<div class="skeleton-post">
+        <div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div>
+        <div class="sk-media skeleton"></div>
+        <div class="sk-text skeleton"></div>
+      </div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  window.signInWithGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e) {} };
+  window.showPhoneInput = () => {
+    document.getElementById('phone-number').style.display = 'block';
+    document.getElementById('send-otp-btn').style.display = 'block';
+    document.getElementById('phone-toggle').style.display = 'none';
+  };
+  window.sendOTP = async () => {
+    const phone = document.getElementById('phone-number').value; if (!phone) return;
+    try {
+      if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      document.getElementById('otp-code').style.display = 'block';
+      document.getElementById('verify-btn').style.display = 'block';
+      document.getElementById('send-otp-btn').style.display = 'none';
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+  window.verifyOTP = async () => {
+    const code = document.getElementById('otp-code').value;
+    if (!code || !confirmationResult) return;
+    try { await confirmationResult.confirm(code); } catch(e) { alert('Invalid code'); }
+  };
+  window.logout = async () => { await signOut(auth); currentUser = null; currentUsername = null; currentPhotoURL = ''; showScreen('auth'); };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      const d = await getDoc(doc(db, 'Users', user.uid));
+      if (d.exists() && d.data().username) {
+        currentUsername = d.data().username;
+        currentPhotoURL = d.data().photoURL || user.photoURL || '';
+        userPhotoCache[currentUsername] = currentPhotoURL;
+        setAvatars();
+        showScreen('app'); loadStories(); loadRightSidebar(); requestNotificationPermission();
+        handleRoute();
+      } else showScreen('uname');
+    } else showScreen('auth');
+  });
+
+  window.saveUsername = async () => {
+    const u = document.getElementById('username-input').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const err = document.getElementById('username-error');
+    if (!u || u.length < 3) { err.textContent = 'Username must be at least 3 characters.'; return; }
+    const q = query(collection(db, 'Users'), where('username', '==', u));
+    if (!(await getDocs(q)).empty) { err.textContent = "This username isn't available."; return; }
+    await setDoc(doc(db, 'Users', currentUser.uid), { username: u, displayName: currentUser.displayName || u, photoURL: currentUser.photoURL || '', following: [], createdAt: Date.now() });
+    currentUsername = u; currentPhotoURL = currentUser.photoURL || '';
+    setAvatars();
+    showScreen('app'); loadRightSidebar(); loadExploreGrid(); loadActivity(); requestNotificationPermission();
+  };
+
+  function showScreen(n) {
+    const loading = document.getElementById('scr-loading');
+    if (loading) loading.style.display = 'none';
+    document.getElementById('scr-auth').style.display = n === 'auth' ? 'flex' : 'none';
+    document.getElementById('scr-uname').style.display = n === 'uname' ? 'flex' : 'none';
+    document.getElementById('scr-app').style.display = n === 'app' ? 'flex' : 'none';
+  }
+
+  window.goTab = (tab, pushState = true) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.getElementById('tab-' + tab).classList.add('on');
+    document.querySelectorAll('.bottomnav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.sidebar-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    if (tab === 'feed') { loadFeed(); if (pushState) history.pushState({ tab: 'feed' }, '', '/'); }
+    if (tab === 'explore') { loadExploreGrid(); if (pushState) history.pushState({ tab: 'explore' }, '', '/explore'); }
+    if (tab === 'activity') { loadActivity(); if (pushState) history.pushState({ tab: 'activity' }, '', '/activity'); }
+  };
+
+  window.openCreate = () => {
+    document.getElementById('create-modal').classList.add('open');
+    document.getElementById('yt-link').value = '';
+    document.getElementById('video-preview').style.display = 'none';
+    document.getElementById('modal-share-btn').disabled = true;
+    document.getElementById('recommend-status').textContent = '';
+    document.getElementById('modal-icon').style.display = '';
+    document.getElementById('modal-prompt').style.display = '';
+  };
+  window.closeCreate = () => { document.getElementById('create-modal').classList.remove('open'); };
+  window.openSettings = () => { document.getElementById('settings-modal').classList.add('open'); };
+  window.closeSettings = () => { document.getElementById('settings-modal').classList.remove('open'); };
+
+  function vid(url) { const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/); return m ? m[1] : null; }
+
+  window.onYTInput = () => {
+    const id = vid(document.getElementById('yt-link').value);
+    if (id) {
+      document.getElementById('yt-iframe').src = 'https://www.youtube.com/embed/' + id;
+      document.getElementById('video-preview').style.display = 'block';
+      document.getElementById('modal-icon').style.display = 'none';
+      document.getElementById('modal-prompt').style.display = 'none';
+      document.getElementById('modal-share-btn').disabled = false;
+    } else {
+      document.getElementById('video-preview').style.display = 'none';
+      document.getElementById('modal-icon').style.display = '';
+      document.getElementById('modal-prompt').style.display = '';
+      document.getElementById('modal-share-btn').disabled = true;
+    }
+  };
+
+  window.recommend = async () => {
+    const id = vid(document.getElementById('yt-link').value);
+    if (!id || !currentUsername) return;
+    const btn = document.getElementById('modal-share-btn'), st = document.getElementById('recommend-status');
+    btn.disabled = true; st.textContent = 'Sharing...';
+    try {
+      await set(ref(rtdb, 'status/' + currentUsername), { videoId: id, timestamp: Date.now() });
+      await addDoc(collection(db, 'Recommendations'), { username: currentUsername, uid: currentUser.uid, videoId: id, timestamp: Date.now() });
+      st.textContent = 'Shared!'; loadStories();
+      showToast('Your recommendation has been shared!');
+      setTimeout(() => { closeCreate(); loadFeed(); goTab('feed'); }, 1500);
+    } catch(e) { st.textContent = 'Error: ' + e.message; btn.disabled = false; }
+  };
+
+  async function loadStories() {
+    const bar = document.getElementById('stories-bar');
+    const d = await getDoc(doc(db, 'Users', currentUser.uid));
+    const following = d.exists() ? (d.data().following || []) : [];
+
+    // Always show stories bar with "Your story" first
+    bar.style.display = 'flex';
+    bar.innerHTML = '';
+
+    // Your story item
+    const yourStory = document.createElement('div');
+    yourStory.className = 'story story-yours';
+    const yourPhoto = currentPhotoURL ? `<img src="${currentPhotoURL}" alt="">` : currentUsername[0].toUpperCase();
+    yourStory.innerHTML = `<div class="story-ring"><div class="story-ava">${yourPhoto}</div></div><div class="story-plus"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="story-name">Your story</div>`;
+    yourStory.onclick = () => openCreate();
+    bar.appendChild(yourStory);
+
+    if (!following.length) return;
+
+    for (const u of following.slice(0, 20)) {
+      const s = await get(ref(rtdb, 'status/' + u));
+      const has = s.exists();
+      const photo = await getUserPhoto(u);
+      const el = document.createElement('div');
+      el.className = 'story';
+      const avaContent = photo ? `<img src="${photo}" alt="">` : u[0].toUpperCase();
+      el.innerHTML = `<div class="story-ring ${has ? '' : 'empty'}"><div class="story-ava">${avaContent}</div></div><div class="story-name">${u}</div>`;
+      if (has) el.onclick = () => window.open('https://youtube.com/watch?v=' + s.val().videoId, '_blank');
+      bar.appendChild(el);
+    }
+  }
+
+  async function loadFeed() {
+    const el = document.getElementById('feed-list');
+    try {
+    const d = await getDoc(doc(db, 'Users', currentUser.uid));
+    const following = d.exists() ? (d.data().following || []) : [];
+    if (!following.length) {
+      el.innerHTML = `<div class="feed-empty">
+        <svg class="feed-empty-icon" width="80" height="80" fill="none" stroke="#262626" stroke-width="1" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <h3>Welcome to Recommenderz</h3>
+        <p>Follow people to see their video recommendations here.<br><br>Use the search tab to find people to follow.</p>
+      </div>`;
+      return;
+    }
+
+    showFeedSkeleton();
+
+    let all = [];
+    for (let i = 0; i < following.length; i += 30) {
+      const b = following.slice(i, i + 30);
+      let q;
+      try { q = query(collection(db, 'Recommendations'), where('username', 'in', b), orderBy('timestamp', 'desc'), limit(20)); }
+      catch(e) { q = query(collection(db, 'Recommendations'), where('username', 'in', b), limit(20)); }
+      (await getDocs(q)).forEach(d => all.push({ ...d.data(), id: d.id }));
+    }
+    all.sort((a, b) => b.timestamp - a.timestamp); all = all.slice(0, 20);
+    if (!all.length) { el.innerHTML = '<div class="feed-empty"><p style="color:#a8a8a8">No recommendations yet from people you follow.</p></div>'; return; }
+
+    // Prefetch photos
+    const uniqueUsers = [...new Set(all.map(r => r.username))];
+    await Promise.all(uniqueUsers.map(u => getUserPhoto(u)));
+
+    el.innerHTML = '';
+    for (const r of all) {
+      const photo = userPhotoCache[r.username] || '';
+      const avaContent = photo ? `<img src="${photo}" alt="">` : r.username[0].toUpperCase();
+      const postId = r.id || r.videoId + r.timestamp;
+      const isLiked = likedPosts.has(postId);
+      const likeCount = Math.floor(Math.random() * 50) + (isLiked ? 1 : 0); // Simulated count
+      const caption = r.caption || 'shared a video recommendation';
+      const truncCaption = caption.length > 80 ? caption.substring(0, 80) : caption;
+      const needsMore = caption.length > 80;
+
+      const article = document.createElement('article');
+      article.className = 'post';
+      article.innerHTML = `
+        <div class="post-head">
+          <div class="post-ava-ring" onclick="viewProfile('${r.username}')"><div class="post-ava">${avaContent}</div></div>
+          <div class="post-user" onclick="viewProfile('${r.username}')">${r.username}</div>
+          <button class="post-dot">&#8226;&#8226;&#8226;</button>
+        </div>
+        <div class="post-media" data-post-id="${postId}"><iframe src="https://www.youtube.com/embed/${r.videoId}" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>
+        <div class="post-actions">
+          <button class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${postId}" onclick="toggleLike(this,'${postId}')"><svg width="24" height="24" fill="${isLiked ? '#ed4956' : 'none'}" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
+          <button><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+          <button onclick="shareVideo('${r.videoId}')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          <button class="right"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
+        </div>
+        <div class="post-meta">
+          <div class="post-likes" data-post-id="${postId}">${likeCount > 0 ? `${likeCount} like${likeCount !== 1 ? 's' : ''}` : ''}</div>
+          <div class="caption"><b onclick="viewProfile('${r.username}')">${r.username}</b> <span class="caption-text">${needsMore ? truncCaption + '...' : caption}</span>${needsMore ? ` <button class="caption-more" onclick="this.previousElementSibling.textContent='${caption.replace(/'/g, "\\'")}';this.remove()">more</button>` : ''}</div>
+          <div class="time">${timeAgo(r.timestamp)}</div>
+        </div>
+      `;
+
+      // Double-tap to like
+      let lastTap = 0;
+      const mediaEl = article.querySelector('.post-media');
+      mediaEl.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IFRAME') return;
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          // Double tap
+          const likeBtn = article.querySelector('.like-btn');
+          if (!likedPosts.has(postId)) {
+            toggleLike(likeBtn, postId);
+          }
+          // Heart animation
+          const overlay = document.createElement('div');
+          overlay.className = 'heart-overlay';
+          overlay.innerHTML = '<svg width="80" height="80" fill="#ed4956" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+          mediaEl.appendChild(overlay);
+          setTimeout(() => overlay.remove(), 800);
+        }
+        lastTap = now;
+      });
+
+      el.appendChild(article);
+    }
+    } catch(e) {
+      console.error('loadFeed error:', e);
+      el.innerHTML = '<div class="feed-empty"><p style="color:#8e8e8e">Could not load feed.</p></div>';
+    }
+  }
+
+  // Toggle like
+  window.toggleLike = (btn, postId) => {
+    if (likedPosts.has(postId)) {
+      likedPosts.delete(postId);
+      btn.classList.remove('liked');
+      btn.querySelector('svg').setAttribute('fill', 'none');
+      btn.querySelector('svg').style.color = '#262626';
+    } else {
+      likedPosts.add(postId);
+      btn.classList.add('liked');
+      btn.querySelector('svg').setAttribute('fill', '#ed4956');
+      btn.querySelector('svg').style.color = '#ed4956';
+      // Small bounce animation
+      btn.style.transform = 'scale(1.2)';
+      setTimeout(() => btn.style.transform = '', 200);
+    }
+  };
+
+  // Share video
+  window.shareVideo = async (videoId) => {
+    const url = 'https://youtube.com/watch?v=' + videoId;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showToast('Link copied to clipboard');
+      }
+    } catch(e) {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Link copied to clipboard');
+      } catch(e2) {}
+    }
+  };
+
+  /* ─── EXPLORE GRID ─── */
+  async function loadExploreGrid() {
+    const container = document.getElementById('explore-grid-container');
+    const searchVal = document.getElementById('user-search').value.trim();
+    if (searchVal.length >= 2) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
+
+    try {
+      const q = query(collection(db, 'Recommendations'), orderBy('timestamp', 'desc'), limit(30));
+      const snap = await getDocs(q);
+      const recs = [];
+      snap.forEach(d => recs.push(d.data()));
+
+      if (!recs.length) {
+        container.innerHTML = `<div class="activity-empty">
+          <div class="activity-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+          <h3>Discover Videos</h3>
+          <p>Recommendations from the community will appear here.</p>
+        </div>`;
+        return;
+      }
+
+      let gridHtml = '<div class="explore-grid">';
+      recs.forEach((r, i) => {
+        // Every 10th item starting at index 0 is large (spans 2x2)
+        const isLarge = (i % 10 === 0);
+        gridHtml += `<div class="explore-grid-item ${isLarge ? 'large' : ''}" onclick="window.open('https://youtube.com/watch?v=${r.videoId}','_blank')">
+          <img src="https://img.youtube.com/vi/${r.videoId}/${isLarge ? 'hqdefault' : 'mqdefault'}.jpg" alt="" loading="lazy">
+          <div class="explore-overlay">
+            <svg class="explore-play" width="${isLarge ? 48 : 32}" height="${isLarge ? 48 : 32}" fill="white" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div class="explore-user">@${r.username}</div>
+        </div>`;
+      });
+      gridHtml += '</div>';
+      container.innerHTML = gridHtml;
+    } catch(e) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#a8a8a8">Could not load explore feed</div>';
+    }
+  }
+
+  /* ─── ACTIVITY / NOTIFICATIONS ─── */
+  async function loadActivity() {
+    const el = document.getElementById('activity-content');
+    el.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
+
+    try {
+      // Get followers (people who follow current user)
+      const fq = query(collection(db, 'Users'), where('following', 'array-contains', currentUsername));
+      const fs = await getDocs(fq);
+      const followers = [];
+      fs.forEach(d => {
+        const data = d.data();
+        if (data.username !== currentUsername) followers.push(data);
+      });
+
+      // Get recent recommendations from followed users
+      const myDoc = await getDoc(doc(db, 'Users', currentUser.uid));
+      const myFollowing = myDoc.exists() ? (myDoc.data().following || []) : [];
+
+      let recentRecs = [];
+      if (myFollowing.length > 0) {
+        const batch = myFollowing.slice(0, 10);
+        const rq = query(collection(db, 'Recommendations'), where('username', 'in', batch), orderBy('timestamp', 'desc'), limit(10));
+        const rs = await getDocs(rq);
+        rs.forEach(d => recentRecs.push(d.data()));
+      }
+
+      if (!followers.length && !recentRecs.length) {
+        el.innerHTML = `<div class="activity-empty">
+          <div class="activity-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+          <h3>Activity</h3>
+          <p>When people interact with you, you'll see it here.</p>
+        </div>`;
+        return;
+      }
+
+      let html = '';
+
+      // Followers section
+      if (followers.length) {
+        html += '<div class="activity-section"><div class="activity-section-title">Followers</div>';
+        for (const f of followers) {
+          const photo = f.photoURL || '';
+          const ava = photo ? `<img src="${photo}" alt="">` : f.username[0].toUpperCase();
+          const isFollowingBack = myFollowing.includes(f.username);
+          html += `<div class="activity-item" onclick="viewProfile('${f.username}')">
+            <div class="activity-ava">${ava}</div>
+            <div class="activity-text"><b>${f.username}</b> started following you. <span class="activity-time">${f.createdAt ? timeAgo(f.createdAt) : ''}</span></div>
+            <button class="activity-follow-btn ${isFollowingBack ? 'on' : ''}" onclick="event.stopPropagation();activityToggleFollow('${f.username}',this)">${isFollowingBack ? 'Following' : 'Follow'}</button>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      // Recent activity
+      if (recentRecs.length) {
+        html += '<div class="activity-section"><div class="activity-section-title">Recent Activity</div>';
+        for (const r of recentRecs) {
+          const photo = await getUserPhoto(r.username);
+          const ava = photo ? `<img src="${photo}" alt="">` : r.username[0].toUpperCase();
+          html += `<div class="activity-item" onclick="window.open('https://youtube.com/watch?v=${r.videoId}','_blank')">
+            <div class="activity-ava">${ava}</div>
+            <div class="activity-text"><b>${r.username}</b> shared a recommendation. <span class="activity-time">${timeAgo(r.timestamp)}</span></div>
+            <div class="activity-thumb"><img src="https://img.youtube.com/vi/${r.videoId}/default.jpg" alt=""></div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      el.innerHTML = html;
+    } catch(e) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:#a8a8a8">Could not load activity</div>';
+    }
+  }
+
+  window.activityToggleFollow = async (username, btn) => {
+    const r = doc(db, 'Users', currentUser.uid);
+    if (btn.textContent === 'Following') {
+      await updateDoc(r, { following: arrayRemove(username) });
+      btn.textContent = 'Follow'; btn.classList.remove('on');
+      showToast(`Unfollowed @${username}`);
+    } else {
+      await updateDoc(r, { following: arrayUnion(username) });
+      btn.textContent = 'Following'; btn.classList.add('on');
+      showToast(`Following @${username}`);
+    }
+    loadStories();
+  };
+
+  /* ─── RIGHT SIDEBAR ─── */
+  async function loadRightSidebar() {
+    const el = document.getElementById('right-sidebar');
+    if (!el) return;
+    const d = await getDoc(doc(db, 'Users', currentUser.uid));
+    const userData = d.exists() ? d.data() : {};
+    const displayName = userData.displayName || currentUsername;
+    const initial = currentUsername[0].toUpperCase();
+    const avaHtml = currentPhotoURL ? `<img src="${currentPhotoURL}" alt="">` : initial;
+
+    // Get suggestions (random users not followed)
+    const myFollowing = userData.following || [];
+    const allUsersQ = query(collection(db, 'Users'), limit(20));
+    const allUsers = await getDocs(allUsersQ);
+    let suggestions = [];
+    allUsers.forEach(d => {
+      const u = d.data();
+      if (u.username !== currentUsername && !myFollowing.includes(u.username)) {
+        suggestions.push(u);
+      }
+    });
+    suggestions = suggestions.slice(0, 5);
+
+    el.innerHTML = `
+      <div class="rs-user">
+        <div class="rs-ava">${avaHtml}</div>
+        <div class="rs-info">
+          <div class="rs-uname" onclick="viewProfile('${currentUsername}')">${currentUsername}</div>
+          <div class="rs-name">${displayName}</div>
+        </div>
+        <button class="rs-switch" onclick="logout()">Switch</button>
+      </div>
+      ${suggestions.length ? `
+        <div class="rs-head">
+          <span class="rs-head-title">Suggested for you</span>
+          <button class="rs-head-link">See All</button>
+        </div>
+        ${suggestions.map(s => `
+          <div class="rs-suggestion">
+            <div class="rs-sug-ava" onclick="viewProfile('${s.username}')">${s.photoURL ? `<img src="${s.photoURL}" alt="">` : s.username[0].toUpperCase()}</div>
+            <div class="rs-sug-info" onclick="viewProfile('${s.username}')">
+              <div class="rs-sug-uname">${s.username}</div>
+              <div class="rs-sug-detail">Suggested for you</div>
+            </div>
+            <button class="rs-follow-btn" onclick="rsFollow('${s.username}',this)">Follow</button>
+          </div>
+        `).join('')}
+      ` : ''}
+      <div class="rs-footer">
+        <span>About</span><span>Help</span><span>Press</span><span>API</span><span>Jobs</span><span>Privacy</span><span>Terms</span>
+        <br>RECOMMENDERZ
+      </div>
+    `;
+  }
+
+  window.rsFollow = async (username, btn) => {
+    const r = doc(db, 'Users', currentUser.uid);
+    await updateDoc(r, { following: arrayUnion(username) });
+    btn.textContent = 'Following';
+    btn.style.color = '#a8a8a8';
+    loadStories();
+    showToast(`Following @${username}`);
+  };
+
+  window.searchUsers = async () => {
+    const t = document.getElementById('user-search').value.trim().toLowerCase(), el = document.getElementById('user-results');
+    const gridContainer = document.getElementById('explore-grid-container');
+    if (t.length < 2) {
+      el.innerHTML = '';
+      loadExploreGrid();
+      return;
+    }
+    gridContainer.innerHTML = '';
+    const q = query(collection(db, 'Users'), where('username', '>=', t), where('username', '<=', t + '\uf8ff'), limit(10));
+    const s = await getDocs(q);
+    const md = await getDoc(doc(db, 'Users', currentUser.uid));
+    const mf = md.exists() ? (md.data().following || []) : [];
+    el.innerHTML = '';
+    s.forEach(d => {
+      const data = d.data(); if (data.username === currentUsername) return;
+      const isF = mf.includes(data.username);
+      const ava = data.photoURL ? `<img src="${data.photoURL}" alt="">` : data.username[0].toUpperCase();
+      el.innerHTML += `<div class="user-row" onclick="viewProfile('${data.username}')">
+        <div class="user-row-ava">${ava}</div>
+        <div class="user-row-info"><div class="user-row-name">${data.username}</div><div class="user-row-full">${data.displayName || ''}</div></div>
+        <button class="follow-btn ${isF ? 'on' : ''}" onclick="event.stopPropagation();toggleFollow('${data.username}',this)">${isF ? 'Following' : 'Follow'}</button>
+      </div>`;
+    });
+  };
+
+  window.toggleFollow = async (username, btn) => {
+    const r = doc(db, 'Users', currentUser.uid);
+    if (btn.textContent === 'Following') {
+      await updateDoc(r, { following: arrayRemove(username) }); btn.textContent = 'Follow'; btn.classList.remove('on');
+      showToast(`Unfollowed @${username}`);
+    } else {
+      await updateDoc(r, { following: arrayUnion(username) }); btn.textContent = 'Following'; btn.classList.add('on');
+      showToast(`Following @${username}`);
+    }
+    loadStories();
+  };
+
+  function timeAgo(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60); if (m < 60) return m + 'm';
+    const h = Math.floor(m / 60); if (h < 24) return h + 'h';
+    const d = Math.floor(h / 24); if (d < 7) return d + 'd';
+    return Math.floor(d / 7) + 'w';
+  }
+
+  async function requestNotificationPermission() {
+    if (!messaging) return;
+    try { const p = await Notification.requestPermission(); if (p === 'granted') { const t = await getToken(messaging, { vapidKey: '' }); if (t) await updateDoc(doc(db, 'Users', currentUser.uid), { fcmToken: t }); } } catch(e) {}
+    if (messaging) onMessage(messaging, p => { if (p.data?.videoId) loadFeed(); });
+  }
+
+  /* ─── PROFILE ─── */
+  window.loadProfile = async (username) => {
+    if (!username) return;
+    const el = document.getElementById('profile-content');
+    el.innerHTML = '<div class="spinner" style="margin:60px auto"></div>';
+
+    try {
+    const uq = query(collection(db, 'Users'), where('username', '==', username), limit(1));
+    const us = await getDocs(uq);
+    if (us.empty) { el.innerHTML = '<div style="text-align:center;padding:60px;color:#8e8e8e">User not found</div>'; return; }
+    const userData = us.docs[0].data();
+    const profileUid = us.docs[0].id;
+    const isOwn = profileUid === currentUser.uid;
+
+    let posts = [];
+    try {
+      const pq = query(collection(db, 'Recommendations'), where('username', '==', username), orderBy('timestamp', 'desc'));
+      const ps = await getDocs(pq);
+      ps.forEach(d => posts.push(d.data()));
+    } catch(e) {
+      // Index might not exist yet, try without orderBy
+      try {
+        const pq2 = query(collection(db, 'Recommendations'), where('username', '==', username));
+        const ps2 = await getDocs(pq2);
+        ps2.forEach(d => posts.push(d.data()));
+        posts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      } catch(e2) {}
+    }
+
+    let followersCount = 0;
+    const followerUsernames = [];
+    try {
+      const fq = query(collection(db, 'Users'), where('following', 'array-contains', username));
+      const fs = await getDocs(fq);
+      followersCount = fs.size;
+      fs.forEach(d => { const data = d.data(); if (data.username !== currentUsername) followerUsernames.push(data.username); });
+    } catch(e) {}
+
+    const myDoc = await getDoc(doc(db, 'Users', currentUser.uid));
+    const myFollowing = myDoc.exists() ? (myDoc.data().following || []) : [];
+    const isFollowing = myFollowing.includes(username);
+
+    // Mutual followers
+    const mutuals = followerUsernames.filter(u => myFollowing.includes(u));
+
+    const followingCount = (userData.following || []).length;
+    const photoURL = userData.photoURL || '';
+    const displayName = userData.displayName || username;
+    const bio = userData.bio || '';
+    const website = userData.website || '';
+    const initial = username[0].toUpperCase();
+
+    el.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-ava-wrap">
+          <div class="profile-ava-ring">
+            <div class="profile-ava">${photoURL ? `<img src="${photoURL}" alt="${username}">` : initial}</div>
+          </div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-top">
+            <span class="profile-uname">${username}</span>
+            ${isOwn
+              ? `<button class="profile-edit-btn" onclick="openEditProfile()">Edit profile</button>
+                 <button class="profile-share-btn" onclick="shareProfile('${username}')">Share profile</button>
+                 <button class="profile-settings-btn" onclick="openSettings()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>`
+              : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''}" id="profile-follow-action" onclick="profileToggleFollow('${username}',this)">${isFollowing ? 'Following' : 'Follow'}</button>
+                 <button class="profile-share-btn" onclick="shareProfile('${username}')">Share</button>`
+            }
+          </div>
+          <div class="profile-stats">
+            <div class="profile-stat"><b>${posts.length}</b> posts</div>
+            <div class="profile-stat"><b>${followersCount}</b> followers</div>
+            <div class="profile-stat"><b>${followingCount}</b> following</div>
+          </div>
+          <div class="profile-name">${displayName}</div>
+          ${bio ? `<div class="profile-bio">${bio}</div>` : ''}
+          ${website ? `<div class="profile-website"><a href="${website}" target="_blank">${website.replace(/^https?:\/\//, '')}</a></div>` : ''}
+          ${!isOwn && mutuals.length > 0 ? `<div class="profile-mutual">Followed by <b>${mutuals[0]}</b>${mutuals.length > 1 ? ` + ${mutuals.length - 1} more` : ''}</div>` : ''}
+        </div>
+      </div>
+      ${isOwn ? `
+        <div class="profile-highlights">
+          <div class="highlight-item">
+            <div class="highlight-circle"><svg width="24" height="24" fill="none" stroke="#8e8e8e" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div class="highlight-name">New</div>
+          </div>
+        </div>
+      ` : ''}
+      <div class="profile-tabs">
+        <button class="profile-tab active" onclick="switchProfileTab('posts',this)">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="1" y="1" width="9" height="9"/><rect x="14" y="1" width="9" height="9"/><rect x="1" y="14" width="9" height="9"/><rect x="14" y="14" width="9" height="9"/></svg> POSTS
+        </button>
+        <button class="profile-tab" onclick="switchProfileTab('saved',this)">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> SAVED
+        </button>
+      </div>
+      <div id="profile-posts-grid">
+      ${posts.length ? `
+        <div class="profile-grid">
+          ${posts.map(p => `
+            <div class="profile-grid-item" onclick="window.open('https://youtube.com/watch?v=${p.videoId}','_blank')">
+              <img src="https://img.youtube.com/vi/${p.videoId}/mqdefault.jpg" alt="" loading="lazy">
+              <div class="grid-overlay"><svg class="grid-play" width="40" height="40" fill="white" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="profile-empty">
+          <div class="profile-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><polygon points="10 8 16 12 10 16" fill="#262626" stroke="none"/></svg></div>
+          <h3>${isOwn ? 'Share Videos' : 'No Posts Yet'}</h3>
+          <p>${isOwn ? 'When you share recommendations, they will appear on your profile.' : 'This user hasn\'t shared any recommendations yet.'}</p>
+        </div>
+      `}
+      </div>
+      <div id="profile-saved-grid" style="display:none">
+        <div class="profile-empty">
+          <div class="profile-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></div>
+          <h3>Save</h3>
+          <p>Save photos and videos that you want to see again.</p>
+        </div>
+      </div>
+    `;
+    } catch(e) {
+      console.error('loadProfile error:', e);
+      el.innerHTML = '<div style="text-align:center;padding:60px;color:#8e8e8e">Could not load profile. Try again.</div>';
+    }
+  };
+
+  // Share profile
+  window.shareProfile = async (username) => {
+    const url = window.location.origin + '/' + username;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `@${username} on Recommenderz`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showToast('Profile link copied to clipboard');
+      }
+    } catch(e) {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Profile link copied to clipboard');
+      } catch(e2) {}
+    }
+  };
+
+  window.switchProfileTab = (tab, btn) => {
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('profile-posts-grid').style.display = tab === 'posts' ? 'block' : 'none';
+    document.getElementById('profile-saved-grid').style.display = tab === 'saved' ? 'block' : 'none';
+  };
+
+  window.profileToggleFollow = async (username, btn) => {
+    const r = doc(db, 'Users', currentUser.uid);
+    if (btn.textContent === 'Following') {
+      await updateDoc(r, { following: arrayRemove(username) });
+      btn.textContent = 'Follow'; btn.classList.remove('following');
+      showToast(`Unfollowed @${username}`);
+    } else {
+      await updateDoc(r, { following: arrayUnion(username) });
+      btn.textContent = 'Following'; btn.classList.add('following');
+      showToast(`Following @${username}`);
+    }
+    loadStories();
+    loadProfile(username);
+  };
+
+  window.openEditProfile = async () => {
+    const d = await getDoc(doc(db, 'Users', currentUser.uid));
+    if (d.exists()) {
+      const data = d.data();
+      document.getElementById('edit-name').value = data.displayName || '';
+      document.getElementById('edit-bio').value = data.bio || '';
+      document.getElementById('edit-website').value = data.website || '';
+    }
+    document.getElementById('edit-modal').classList.add('open');
+  };
+  window.closeEditProfile = () => { document.getElementById('edit-modal').classList.remove('open'); };
+
+  window.saveProfile = async () => {
+    const name = document.getElementById('edit-name').value.trim();
+    const bio = document.getElementById('edit-bio').value.trim();
+    const website = document.getElementById('edit-website').value.trim();
+    const btn = document.getElementById('edit-save-btn');
+    btn.disabled = true;
+    try {
+      await updateDoc(doc(db, 'Users', currentUser.uid), { displayName: name || currentUsername, bio, website });
+      closeEditProfile();
+      viewProfile(currentUsername);
+      showToast('Profile updated');
+    } catch(e) { alert('Error: ' + e.message); }
+    btn.disabled = false;
+  };
+
+  window.viewProfile = (username, pushState = true) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.getElementById('tab-profile').classList.add('on');
+    document.querySelectorAll('.bottomnav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'profile'));
+    document.querySelectorAll('.sidebar-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'profile'));
+    if (pushState) history.pushState({ tab: 'profile', username }, '', '/' + username);
+    loadProfile(username);
+  };
+
+  /* ─── URL ROUTING ─── */
+  function handleRoute(pushState = false) {
+    const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    if (!path || path === '') {
+      goTab('feed', pushState);
+    } else if (path === 'explore') {
+      goTab('explore', pushState);
+    } else if (path === 'activity') {
+      goTab('activity', pushState);
+    } else {
+      // Treat as username
+      viewProfile(path, pushState);
+    }
+  }
+
+  window.addEventListener('popstate', (e) => {
+    if (!currentUser || !currentUsername) return;
+    if (e.state && e.state.tab) {
+      if (e.state.tab === 'profile' && e.state.username) {
+        viewProfile(e.state.username, false);
+      } else {
+        goTab(e.state.tab, false);
+      }
+    } else {
+      handleRoute(false);
+    }
+  });
+
+  /* ─── PULL TO REFRESH ─── */
+  let ptrStartY = 0, ptrActive = false;
+  const mainArea = document.getElementById('main-area');
+  if (mainArea) {
+    mainArea.addEventListener('touchstart', (e) => {
+      if (mainArea.scrollTop === 0) {
+        ptrStartY = e.touches[0].clientY;
+        ptrActive = true;
+      }
+    }, { passive: true });
+
+    mainArea.addEventListener('touchmove', (e) => {
+      if (!ptrActive) return;
+      const diff = e.touches[0].clientY - ptrStartY;
+      const indicator = document.getElementById('ptr-indicator');
+      if (diff > 60 && indicator) {
+        indicator.style.display = 'block';
+        indicator.textContent = 'Release to refresh';
+      }
+    }, { passive: true });
+
+    mainArea.addEventListener('touchend', () => {
+      if (!ptrActive) return;
+      ptrActive = false;
+      const indicator = document.getElementById('ptr-indicator');
+      if (indicator && indicator.style.display === 'block') {
+        indicator.textContent = 'Refreshing...';
+        loadFeed();
+        loadStories();
+        setTimeout(() => { indicator.style.display = 'none'; }, 1000);
+      }
+    });
+  }
+</script>
+</body>
+</html>

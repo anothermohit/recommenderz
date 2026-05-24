@@ -1,0 +1,21 @@
+{
+  "name": "Recommenderz",
+  "short_name": "Recommenderz",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#ff4444",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192.png?text=R",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512.png?text=R",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "gcm_sender_id": "103953800507"
+}

@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "status": {
+      "$username": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    }
+  }
+}
