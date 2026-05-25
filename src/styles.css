@@ -274,19 +274,8 @@ a{text-decoration:none;color:inherit}
 .settings-item.danger{color:#ed4956}
 .settings-handle{width:40px;height:4px;background:#dbdbdb;border-radius:2px;margin:8px auto}
 
-/* ─── SIDEBAR (desktop) ─── */
-.sidebar{display:none;width:73px;background:linear-gradient(180deg,#f8fdff 0%,#f0f9fc 100%);border-right:1px solid #dbdbdb;flex-direction:column;padding:8px 12px;flex-shrink:0}
-@media(min-width:768px){
-  .sidebar{display:flex}
-}
-@media(min-width:1264px){
-  .sidebar{width:245px}
-  .sidebar-logo-full{display:block}
-  .sidebar-logo-icon{display:none}
-  .sidebar-item{justify-content:flex-start;gap:16px;padding:12px}
-  .sidebar-item:hover{background:#fafafa;border-radius:8px}
-  .sidebar-label{display:inline}
-}
+/* ─── SIDEBAR (hidden — mobile-only layout) ─── */
+.sidebar{display:none!important}
 .sidebar-logo-wrap{padding:12px 12px 20px;margin-bottom:4px}
 .sidebar-logo-full{display:none;font-size:22px;font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-0.5px;color:#262626;padding:16px 0}
 .sidebar-logo-icon{display:flex;justify-content:center;padding:12px 0}
