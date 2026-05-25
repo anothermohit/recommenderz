@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, signOut, signInAnonymously, ConfirmationResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { requestNotificationPermission, subscribeToUserTopic } from '../lib/fcm';
 import type { UserDoc } from '../lib/types';
 
 interface AuthState {
@@ -51,10 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(u);
         const d = await getDoc(doc(db, 'Users', u.uid));
         if (d.exists() && d.data().username) {
-          setUserDoc(d.data() as UserDoc);
+          const uDoc = d.data() as UserDoc;
+          setUserDoc(uDoc);
           setNeedsUsername(false);
           localStorage.setItem('r_logged_in', '1');
-          localStorage.setItem('r_username', d.data().username);
+          localStorage.setItem('r_username', uDoc.username);
+          // Request FCM permission and subscribe to followed users' topics
+          requestNotificationPermission(u.uid).then((token) => {
+            if (token && uDoc.following?.length) {
+              uDoc.following.forEach((f) => subscribeToUserTopic(f));
+            }
+          });
         } else {
           setNeedsUsername(true);
         }

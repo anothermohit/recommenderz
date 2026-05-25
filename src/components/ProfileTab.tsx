@@ -5,6 +5,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useCache } from '../context/CacheContext';
 import { useToast } from '../hooks/useToast';
+import { subscribeToUserTopic, unsubscribeFromUserTopic } from '../lib/fcm';
 import { SettingsIcon, ChevronDownIcon } from './Icons';
 import EditProfileModal from './EditProfileModal';
 import SettingsModal from './SettingsModal';
@@ -155,10 +156,12 @@ export default function ProfileTab() {
       await updateDoc(r, { following: arrayRemove(profileUsername) });
       setIsFollowing(false);
       setFollowers(prev => prev.filter(f => f.username !== myUsername));
+      unsubscribeFromUserTopic(profileUsername);
       showToast(`Unfollowed @${profileUsername}`);
     } else {
       await updateDoc(r, { following: arrayUnion(profileUsername) });
       setIsFollowing(true);
+      subscribeToUserTopic(profileUsername);
       setFollowers(prev => [...prev, { username: myUsername || '', photoURL: myPhotoURL || '', displayName: myUsername || '' }]);
       showToast(`Following @${profileUsername}`);
     }

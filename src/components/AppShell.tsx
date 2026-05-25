@@ -1,6 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/useToast';
+import { listenForForegroundMessages } from '../lib/fcm';
 import { HomeIcon, CompassIcon, CreateIcon, BellIcon, LogoIcon, MenuIcon } from './Icons';
 import FeedTab from './FeedTab';
 import ExploreTab from './ExploreTab';
@@ -11,6 +13,7 @@ import SettingsModal from './SettingsModal';
 
 export default function AppShell() {
   const { username, photoURL } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [createOpen, setCreateOpen] = useState(false);
@@ -18,6 +21,13 @@ export default function AppShell() {
 
   const openCreate = useCallback(() => setCreateOpen(true), []);
   const closeCreate = useCallback(() => setCreateOpen(false), []);
+
+  // Listen for foreground FCM messages
+  useEffect(() => {
+    return listenForForegroundMessages((title, body) => {
+      showToast(`${title}: ${body}`);
+    });
+  }, [showToast]);
 
   // Determine active tab from location
   const path = location.pathname.replace(/^\/+|\/+$/g, '');
