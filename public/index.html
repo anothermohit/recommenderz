@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Recommenderz</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');</script>
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -50,11 +52,11 @@
     .auth-wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#fafafa}
     .auth-box{width:350px;background:#fff;border:1px solid #dbdbdb;padding:40px;display:flex;flex-direction:column;align-items:center;border-radius:4px}
     @media(max-width:450px){.auth-box{border:none;background:#fafafa;width:100%;padding:40px 32px}}
-    .auth-logo{font-size:36px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;margin-bottom:32px;color:#262626}
+    .auth-logo{font-size:36px;font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-1px;margin-bottom:32px;color:#262626}
     .auth-input{width:100%;background:#fafafa;border:1px solid #dbdbdb;border-radius:3px;padding:9px 8px;font-size:12px;color:#262626;outline:none;margin-bottom:6px}
     .auth-input:focus{border-color:#a8a8a8}
     .auth-input::placeholder{color:#8e8e8e;font-size:12px}
-    .auth-btn{width:100%;background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:8px 16px;margin-top:8px;transition:opacity .15s}
+    .auth-btn{width:100%;background:#00b4d8;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:8px 16px;margin-top:8px;transition:opacity .15s}
     .auth-btn:hover{opacity:.85}
     .auth-btn:active{opacity:.7}
     .auth-btn:disabled{opacity:.3}
@@ -66,7 +68,7 @@
     .auth-google:active{opacity:.6}
     .auth-footer{width:350px;background:#fff;border:1px solid #dbdbdb;padding:20px;text-align:center;margin-top:10px;font-size:14px;color:#262626;border-radius:4px}
     @media(max-width:450px){.auth-footer{border:none;background:transparent;width:100%}}
-    .auth-footer span{color:#0095f6;font-weight:600;cursor:pointer}
+    .auth-footer span{color:#00b4d8;font-weight:600;cursor:pointer}
     .auth-phone-link{color:#00376b;font-size:12px;margin-top:16px;background:none;border:none;font-family:inherit}
 
     /* ─── USERNAME ─── */
@@ -81,7 +83,7 @@
 
     /* Top Nav (mobile only) */
     .topnav{height:44px;background:#fff;border-bottom:1px solid #dbdbdb;display:flex;align-items:center;padding:0 16px;flex-shrink:0}
-    .topnav-logo{font-size:22px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;flex:1;color:#262626}
+    .topnav-logo{font-size:22px;font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-0.5px;flex:1;color:#262626}
     .topnav-right{display:flex;align-items:center;gap:20px}
     .topnav-right button{background:none;border:none;display:flex;padding:0;position:relative}
     .topnav-badge{position:absolute;top:-4px;right:-4px;background:#ff3040;width:8px;height:8px;border-radius:50%;border:2px solid #fff}
@@ -90,7 +92,7 @@
     .app-body{display:flex;flex:1;overflow:hidden}
 
     /* ─── SIDEBAR (desktop) ─── */
-    .sidebar{display:none;width:73px;background:#fff;border-right:1px solid #dbdbdb;flex-direction:column;padding:8px 12px;flex-shrink:0}
+    .sidebar{display:none;width:73px;background:linear-gradient(180deg,#f8fdff 0%,#f0f9fc 100%);border-right:1px solid #dbdbdb;flex-direction:column;padding:8px 12px;flex-shrink:0}
     @media(min-width:768px){
       .sidebar{display:flex}
       .bottomnav{display:none!important}
@@ -105,7 +107,7 @@
       .sidebar-label{display:inline}
     }
     .sidebar-logo-wrap{padding:12px 12px 20px;margin-bottom:4px}
-    .sidebar-logo-full{display:none;font-size:22px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;color:#262626;padding:16px 0}
+    .sidebar-logo-full{display:none;font-size:22px;font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-0.5px;color:#262626;padding:16px 0}
     .sidebar-logo-icon{display:flex;justify-content:center;padding:12px 0}
     .sidebar-item{display:flex;align-items:center;justify-content:center;padding:12px;background:none;border:none;position:relative;width:100%;color:#262626;transition:background .15s}
     @media(max-width:1263px){.sidebar-item:hover{background:#fafafa;border-radius:8px}}
@@ -142,7 +144,7 @@
     .rs-uname{font-size:14px;font-weight:600;color:#262626;cursor:pointer}
     .rs-uname:hover{text-decoration:underline}
     .rs-name{font-size:14px;color:#8e8e8e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .rs-switch{background:none;border:none;color:#0095f6;font-size:12px;font-weight:600;flex-shrink:0;transition:opacity .15s}
+    .rs-switch{background:none;border:none;color:#00b4d8;font-size:12px;font-weight:600;flex-shrink:0;transition:opacity .15s}
     .rs-switch:hover{opacity:.7}
     .rs-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
     .rs-head-title{font-size:14px;font-weight:600;color:#8e8e8e}
@@ -154,18 +156,18 @@
     .rs-sug-info{flex:1;min-width:0;cursor:pointer}
     .rs-sug-uname{font-size:14px;font-weight:600;color:#262626}
     .rs-sug-detail{font-size:12px;color:#8e8e8e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .rs-follow-btn{background:none;border:none;color:#0095f6;font-size:12px;font-weight:600;flex-shrink:0;transition:opacity .15s}
+    .rs-follow-btn{background:none;border:none;color:#00b4d8;font-size:12px;font-weight:600;flex-shrink:0;transition:opacity .15s}
     .rs-follow-btn:hover{opacity:.7}
     .rs-follow-btn:active{opacity:.6}
     .rs-footer{margin-top:24px;font-size:12px;color:#c7c7c7;line-height:1.8}
     .rs-footer span{margin-right:4px}
 
     /* ─── STORIES ─── */
-    .stories{display:flex;gap:0;padding:16px 12px 12px;overflow-x:auto;scrollbar-width:none;background:#fff;border:1px solid #dbdbdb;border-radius:8px;margin:16px 0 24px}
+    .stories{display:flex;gap:0;padding:16px 12px 12px;overflow-x:auto;scrollbar-width:none;background:#fff;border:1px solid #efefef;border-radius:12px;margin:16px 0 24px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
     .stories::-webkit-scrollbar{display:none}
     @media(max-width:470px){.stories{border-radius:0;border-left:none;border-right:none;margin:0 0 8px;border-color:#dbdbdb}}
     .story{display:flex;flex-direction:column;align-items:center;min-width:66px;width:66px;cursor:pointer;gap:4px}
-    .story-ring{width:56px;height:56px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);transition:transform .15s}
+    .story-ring{width:56px;height:56px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#00b4d8,#0096c7,#0077b6,#48cae4,#90e0ef);transition:transform .15s}
     .story:hover .story-ring{transform:scale(1.05)}
     .story-ring.empty{background:#dbdbdb;padding:3px}
     .story-ava{width:100%;height:100%;border-radius:50%;border:3px solid #fff;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;color:#8e8e8e;overflow:hidden}
@@ -173,14 +175,14 @@
     .story-name{font-size:12px;color:#262626;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
     .story-yours{position:relative}
     .story-yours .story-ring{background:#dbdbdb}
-    .story-yours .story-plus{position:absolute;bottom:14px;right:8px;width:18px;height:18px;background:#0095f6;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+    .story-yours .story-plus{position:absolute;bottom:14px;right:8px;width:18px;height:18px;background:#00b4d8;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
     .story-yours .story-plus svg{color:#fff}
 
     /* ─── FEED POST ─── */
-    .post{background:#fff;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:12px;padding-bottom:12px}
+    .post{background:#fff;border:1px solid #efefef;border-radius:12px;margin-bottom:12px;padding-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
     @media(max-width:470px){.post{border-radius:0;border-left:none;border-right:none}}
     .post-head{display:flex;align-items:center;padding:10px 12px;gap:10px}
-    .post-ava-ring{width:32px;height:32px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);flex-shrink:0;cursor:pointer;transition:transform .15s}
+    .post-ava-ring{width:32px;height:32px;border-radius:50%;padding:2px;background:#00b4d8;flex-shrink:0;cursor:pointer;transition:transform .15s}
     .post-ava-ring:hover{transform:scale(1.05)}
     .post-ava{width:100%;height:100%;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#8e8e8e;border:2px solid #fff;overflow:hidden}
     .post-ava img{width:100%;height:100%;object-fit:cover}
@@ -226,7 +228,7 @@
     .user-row-info{flex:1;min-width:0}
     .user-row-name{font-size:14px;font-weight:600;color:#262626}
     .user-row-full{font-size:14px;color:#8e8e8e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .follow-btn{background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 20px;flex-shrink:0;transition:opacity .15s}
+    .follow-btn{background:#00b4d8;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;padding:7px 20px;flex-shrink:0;transition:opacity .15s}
     .follow-btn:hover{opacity:.85}
     .follow-btn:active{opacity:.7}
     .follow-btn.on{background:#efefef;color:#262626}
@@ -256,7 +258,7 @@
     .activity-text .activity-time{color:#8e8e8e}
     .activity-thumb{width:44px;height:44px;border-radius:4px;overflow:hidden;flex-shrink:0;background:#efefef}
     .activity-thumb img{width:100%;height:100%;object-fit:cover}
-    .activity-follow-btn{background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 20px;flex-shrink:0}
+    .activity-follow-btn{background:#00b4d8;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 20px;flex-shrink:0}
     .activity-follow-btn.on{background:#efefef;color:#262626}
     .activity-empty{display:flex;flex-direction:column;align-items:center;padding:80px 40px;text-align:center}
     .activity-empty-icon{width:62px;height:62px;border-radius:50%;border:2px solid #262626;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
@@ -269,7 +271,7 @@
     .modal{background:#fff;border-radius:12px;width:calc(100% - 64px);max-width:530px;overflow:hidden}
     .modal-head{display:flex;align-items:center;justify-content:center;padding:12px 16px;border-bottom:1px solid #dbdbdb;position:relative}
     .modal-head h3{font-size:16px;font-weight:600;color:#262626}
-    .modal-head .share-action{position:absolute;right:16px;background:none;border:none;color:#0095f6;font-size:14px;font-weight:600;transition:opacity .15s}
+    .modal-head .share-action{position:absolute;right:16px;background:none;border:none;color:#00b4d8;font-size:14px;font-weight:600;transition:opacity .15s}
     .modal-head .share-action:disabled{opacity:.3}
     .modal-body{min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 32px}
     .modal-body .icon-art{margin-bottom:16px}
@@ -283,13 +285,13 @@
     .share-status{text-align:center;font-size:14px;color:#58c322;margin-top:8px;min-height:21px}
 
     /* ─── BOTTOM NAV (mobile) ─── */
-    .bottomnav{display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid #dbdbdb;padding:4px 0;padding-bottom:calc(4px + env(safe-area-inset-bottom));flex-shrink:0}
+    .bottomnav{display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid #efefef;padding:6px 8px;padding-bottom:calc(6px + env(safe-area-inset-bottom));flex-shrink:0;box-shadow:0 -1px 4px rgba(0,0,0,.04)}
     .bottomnav button{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0;background:none;border:none;position:relative}
     .bottomnav button svg{color:#262626;transition:transform .1s}
     .bottomnav button:active svg{transform:scale(.9)}
     .bottomnav button.active svg{stroke-width:2.5}
     .bottomnav .bnav-ava{width:24px;height:24px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8e8e8e;overflow:hidden;border:2px solid transparent}
-    .bottomnav .active .bnav-ava{border-color:#262626}
+    .bottomnav .active .bnav-ava{border-color:#00b4d8}
     .bottomnav .bnav-ava img{width:100%;height:100%;object-fit:cover}
     .bottomnav .bnav-badge{position:absolute;top:4px;right:50%;margin-right:-14px;background:#ff3040;width:6px;height:6px;border-radius:50%}
 
@@ -297,7 +299,7 @@
     .profile-header{display:flex;padding:16px 28px 16px 16px;gap:28px;align-items:flex-start}
     @media(min-width:768px){.profile-header{padding:30px 16px;gap:80px;justify-content:center;max-width:935px;margin:0 auto}}
     .profile-ava-wrap{flex-shrink:0}
-    .profile-ava-ring{width:83px;height:83px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+    .profile-ava-ring{width:83px;height:83px;border-radius:50%;padding:3px;background:#00b4d8}
     @media(min-width:768px){.profile-ava-ring{width:156px;height:156px}}
     .profile-ava{width:100%;height:100%;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px;color:#8e8e8e;overflow:hidden;border:3px solid #fff}
     @media(min-width:768px){.profile-ava{font-size:56px}}
@@ -312,7 +314,7 @@
     .profile-share-btn:hover{background:#dbdbdb}
     .profile-share-btn:active{opacity:.7}
     .profile-settings-btn{background:none;border:none;color:#262626;padding:4px;cursor:pointer;display:flex}
-    .profile-follow-btn{background:#0095f6;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 24px;cursor:pointer;transition:opacity .15s}
+    .profile-follow-btn{background:#00b4d8;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:7px 24px;cursor:pointer;transition:opacity .15s}
     .profile-follow-btn:hover{opacity:.85}
     .profile-follow-btn:active{opacity:.7}
     .profile-follow-btn.following{background:#efefef;color:#262626}
@@ -367,7 +369,7 @@
     .edit-modal-head{display:flex;align-items:center;justify-content:center;padding:12px 16px;border-bottom:1px solid #dbdbdb;position:relative}
     .edit-modal-head h3{font-size:16px;font-weight:600;color:#262626}
     .edit-modal-head .edit-cancel{position:absolute;left:16px;background:none;border:none;color:#262626;font-size:14px;cursor:pointer}
-    .edit-modal-head .edit-save{position:absolute;right:16px;background:none;border:none;color:#0095f6;font-size:14px;font-weight:600;cursor:pointer}
+    .edit-modal-head .edit-save{position:absolute;right:16px;background:none;border:none;color:#00b4d8;font-size:14px;font-weight:600;cursor:pointer}
     .edit-modal-head .edit-save:disabled{opacity:.3}
     .edit-modal-body{padding:24px 32px;display:flex;flex-direction:column;gap:16px}
     .edit-field label{font-size:12px;font-weight:600;color:#8e8e8e;display:block;margin-bottom:4px}
@@ -391,15 +393,21 @@
 </head>
 <body>
 
-<!-- AUTH -->
-<!-- LOADING SPLASH -->
+<!-- LOADING SPLASH (only shown on first visit / not logged in before) -->
 <div id="scr-loading" style="min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#fafafa">
   <div style="text-align:center">
-    <div style="font-size:36px;font-family:'Segoe Script','Dancing Script','Billabong',cursive;color:#262626;margin-bottom:16px">Recommenderz</div>
+    <div style="font-size:36px;font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-1px;color:#262626;margin-bottom:16px">Recommenderz</div>
     <div class="spinner"></div>
   </div>
 </div>
+<script>
+// If user was previously logged in, show app shell immediately — no loading splash
+if (localStorage.getItem('r_logged_in')) {
+  document.getElementById('scr-loading').style.display = 'none';
+}
+</script>
 
+<!-- AUTH -->
 <div id="scr-auth" class="auth-wrap" style="display:none">
   <div style="display:flex;flex-direction:column;align-items:center">
     <div class="auth-box">
@@ -432,13 +440,14 @@
 </div>
 
 <!-- APP -->
-<div id="scr-app" class="app">
+<div id="scr-app" class="app" style="display:none">
+<script>if(localStorage.getItem('r_logged_in'))document.getElementById('scr-app').style.display='flex';</script>
   <!-- Top nav mobile -->
   <div class="topnav">
     <div class="topnav-logo">Recommenderz</div>
     <div class="topnav-right">
       <button onclick="goTab('activity')">
-        <svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         <div class="topnav-badge" id="topnav-activity-badge" style="display:none"></div>
       </button>
       <button><svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
@@ -450,16 +459,16 @@
     <div class="sidebar">
       <div class="sidebar-logo-wrap">
         <div class="sidebar-logo-full">Recommenderz</div>
-        <div class="sidebar-logo-icon"><svg width="24" height="24" fill="none" stroke="#262626" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="#262626" stroke="none"/></svg></div>
+        <div class="sidebar-logo-icon"><svg width="24" height="24" fill="none" stroke="#262626" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><polygon points="10 8 16 12 10 16" fill="#262626" stroke="none"/></svg></div>
       </div>
       <!-- Home -->
       <button onclick="goTab('feed')" class="sidebar-item active" data-tab="feed">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16" fill="currentColor" stroke="none"/></svg>
         <span class="sidebar-label">Home</span>
       </button>
       <!-- Search -->
       <button onclick="goTab('explore')" class="sidebar-item" data-tab="explore">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
         <span class="sidebar-label">Search</span>
       </button>
       <!-- Explore -->
@@ -474,12 +483,12 @@
       </button>
       <!-- Notifications -->
       <button onclick="goTab('activity')" class="sidebar-item" data-tab="activity">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         <span class="sidebar-label">Notifications</span>
       </button>
       <!-- Create -->
       <button onclick="openCreate()" class="sidebar-item">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         <span class="sidebar-label">Create</span>
       </button>
       <!-- Profile -->
@@ -504,16 +513,46 @@
         <div class="ptr-indicator" id="ptr-indicator">Pull to refresh</div>
         <div class="feed-layout">
           <div class="feed-col">
-            <div id="stories-bar" class="stories"></div>
-            <div id="feed-list"></div>
+            <div id="stories-bar" class="stories">
+              <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
+              <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
+              <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
+              <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
+              <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
+            </div>
+            <div id="feed-list">
+              <div class="skeleton-post"><div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div><div class="sk-media skeleton"></div><div class="sk-text skeleton"></div></div>
+              <div class="skeleton-post"><div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div><div class="sk-media skeleton"></div><div class="sk-text skeleton"></div></div>
+              <div class="skeleton-post"><div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div><div class="sk-media skeleton"></div><div class="sk-text skeleton"></div></div>
+            </div>
           </div>
-          <div class="right-sidebar" id="right-sidebar"></div>
+          <div class="right-sidebar" id="right-sidebar">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div><div class="skeleton" style="width:100px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:70px;height:10px"></div></div></div>
+            <div class="skeleton" style="width:140px;height:12px;margin-bottom:16px"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div><div class="skeleton" style="width:80px;height:11px;margin-bottom:4px"></div><div class="skeleton" style="width:60px;height:9px"></div></div></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div><div class="skeleton" style="width:90px;height:11px;margin-bottom:4px"></div><div class="skeleton" style="width:60px;height:9px"></div></div></div>
+          </div>
         </div>
       </div>
 
       <!-- PROFILE TAB -->
       <div id="tab-profile" class="tab">
-        <div id="profile-content"></div>
+        <div id="profile-content">
+          <div class="profile-header">
+            <div class="profile-ava-wrap"><div class="skeleton skeleton-circle" style="width:77px;height:77px"></div></div>
+            <div class="profile-info" style="flex:1">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton" style="width:120px;height:18px"></div><div class="skeleton" style="width:90px;height:32px;border-radius:8px"></div></div>
+              <div style="display:flex;gap:30px;margin-bottom:16px"><div class="skeleton" style="width:60px;height:14px"></div><div class="skeleton" style="width:70px;height:14px"></div><div class="skeleton" style="width:70px;height:14px"></div></div>
+              <div class="skeleton" style="width:100px;height:12px;margin-bottom:6px"></div>
+              <div class="skeleton" style="width:180px;height:12px"></div>
+            </div>
+          </div>
+          <div style="border-top:1px solid #dbdbdb;display:flex;justify-content:center;gap:3px;padding:16px 3px">
+            <div class="skeleton" style="width:33%;aspect-ratio:1"></div>
+            <div class="skeleton" style="width:33%;aspect-ratio:1"></div>
+            <div class="skeleton" style="width:33%;aspect-ratio:1"></div>
+          </div>
+        </div>
       </div>
 
       <!-- EXPLORE TAB -->
@@ -521,12 +560,18 @@
         <div style="max-width:600px;margin:0 auto">
           <div class="search-wrap">
             <div class="search-wrap-inner">
-              <svg class="search-icon" width="16" height="16" fill="none" stroke="#8e8e8e" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <svg class="search-icon" width="16" height="16" fill="none" stroke="#8e8e8e" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
               <input type="text" id="user-search" class="search-box" placeholder="Search" oninput="searchUsers()">
             </div>
           </div>
           <div id="user-results"></div>
-          <div id="explore-grid-container"></div>
+          <div id="explore-grid-container">
+            <div class="explore-grid">
+              <div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div>
+              <div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div>
+              <div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -534,7 +579,9 @@
       <div id="tab-activity" class="tab">
         <div style="max-width:600px;margin:0 auto">
           <div class="activity-header">Notifications</div>
-          <div id="activity-content"></div>
+          <div id="activity-content">
+            <div style="padding:12px 16px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div style="flex:1"><div class="skeleton" style="width:200px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:60px;height:10px"></div></div></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div style="flex:1"><div class="skeleton" style="width:180px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:50px;height:10px"></div></div></div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -542,11 +589,11 @@
 
   <!-- Bottom nav mobile -->
   <div class="bottomnav">
-    <button onclick="goTab('feed')" class="active" data-tab="feed"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
-    <button onclick="goTab('explore')" data-tab="explore"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
-    <button onclick="openCreate()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></button>
+    <button onclick="goTab('feed')" class="active" data-tab="feed"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16" fill="currentColor" stroke="none"/></svg></button>
+    <button onclick="goTab('explore')" data-tab="explore"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></button>
+    <button onclick="openCreate()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></button>
     <button onclick="goTab('activity')" data-tab="activity">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     </button>
     <button onclick="viewProfile(currentUsername)" data-tab="profile"><div class="bnav-ava" id="bnav-ava"></div></button>
   </div>
@@ -628,6 +675,9 @@
   let currentUser = null, currentPhotoURL = '', confirmationResult = null;
   window.currentUsername = null;
 
+  // Client-side data cache — avoid re-fetching on tab switches
+  const cache = { feed: null, stories: null, rightSidebar: null, explore: null, activity: null, profiles: {} };
+
   // User photo cache to avoid repeated lookups
   const userPhotoCache = {};
   async function getUserPhoto(username) {
@@ -704,7 +754,7 @@
     if (!code || !confirmationResult) return;
     try { await confirmationResult.confirm(code); } catch(e) { alert('Invalid code'); }
   };
-  window.logout = async () => { await signOut(auth); currentUser = null; currentUsername = null; currentPhotoURL = ''; showScreen('auth'); };
+  window.logout = async () => { localStorage.removeItem('r_logged_in'); localStorage.removeItem('r_username'); await signOut(auth); currentUser = null; currentUsername = null; currentPhotoURL = ''; showScreen('auth'); };
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -714,6 +764,8 @@
         currentUsername = d.data().username;
         currentPhotoURL = d.data().photoURL || user.photoURL || '';
         userPhotoCache[currentUsername] = currentPhotoURL;
+        localStorage.setItem('r_logged_in', '1');
+        localStorage.setItem('r_username', currentUsername);
         setAvatars();
         showScreen('app'); loadStories(); loadRightSidebar(); requestNotificationPermission();
         handleRoute();
@@ -746,9 +798,18 @@
     document.getElementById('tab-' + tab).classList.add('on');
     document.querySelectorAll('.bottomnav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     document.querySelectorAll('.sidebar-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-    if (tab === 'feed') { loadFeed(); if (pushState) history.pushState({ tab: 'feed' }, '', '/'); }
-    if (tab === 'explore') { loadExploreGrid(); if (pushState) history.pushState({ tab: 'explore' }, '', '/explore'); }
-    if (tab === 'activity') { loadActivity(); if (pushState) history.pushState({ tab: 'activity' }, '', '/activity'); }
+    if (tab === 'feed') {
+      if (!cache.feed) loadFeed(); // only fetch if not cached
+      if (pushState) history.pushState({ tab: 'feed' }, '', '/');
+    }
+    if (tab === 'explore') {
+      if (!cache.explore) loadExploreGrid();
+      if (pushState) history.pushState({ tab: 'explore' }, '', '/explore');
+    }
+    if (tab === 'activity') {
+      if (!cache.activity) loadActivity();
+      if (pushState) history.pushState({ tab: 'activity' }, '', '/activity');
+    }
   };
 
   window.openCreate = () => {
@@ -792,6 +853,7 @@
       await addDoc(collection(db, 'Recommendations'), { username: currentUsername, uid: currentUser.uid, videoId: id, timestamp: Date.now() });
       st.textContent = 'Shared!'; loadStories();
       showToast('Your recommendation has been shared!');
+      cache.feed = null; cache.explore = null; cache.profiles = {};
       setTimeout(() => { closeCreate(); loadFeed(); goTab('feed'); }, 1500);
     } catch(e) { st.textContent = 'Error: ' + e.message; btn.disabled = false; }
   };
@@ -839,6 +901,7 @@
         <h3>Welcome to Recommenderz</h3>
         <p>Follow people to see their video recommendations here.<br><br>Use the search tab to find people to follow.</p>
       </div>`;
+      cache.feed = true;
       return;
     }
 
@@ -916,6 +979,7 @@
 
       el.appendChild(article);
     }
+    cache.feed = true;
     } catch(e) {
       console.error('loadFeed error:', e);
       el.innerHTML = '<div class="feed-empty"><p style="color:#8e8e8e">Could not load feed.</p></div>';
@@ -998,6 +1062,7 @@
       });
       gridHtml += '</div>';
       container.innerHTML = gridHtml;
+      cache.explore = true;
     } catch(e) {
       container.innerHTML = '<div style="text-align:center;padding:40px;color:#a8a8a8">Could not load explore feed</div>';
     }
@@ -1032,7 +1097,7 @@
 
       if (!followers.length && !recentRecs.length) {
         el.innerHTML = `<div class="activity-empty">
-          <div class="activity-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+          <div class="activity-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
           <h3>Activity</h3>
           <p>When people interact with you, you'll see it here.</p>
         </div>`;
@@ -1073,6 +1138,7 @@
       }
 
       el.innerHTML = html;
+      cache.activity = true;
     } catch(e) {
       el.innerHTML = '<div style="text-align:center;padding:40px;color:#a8a8a8">Could not load activity</div>';
     }
@@ -1152,6 +1218,7 @@
     await updateDoc(r, { following: arrayUnion(username) });
     btn.textContent = 'Following';
     btn.style.color = '#a8a8a8';
+    cache.feed = null; cache.activity = null; cache.profiles = {};
     loadStories();
     showToast(`Following @${username}`);
   };
@@ -1191,6 +1258,7 @@
       await updateDoc(r, { following: arrayUnion(username) }); btn.textContent = 'Following'; btn.classList.add('on');
       showToast(`Following @${username}`);
     }
+    cache.feed = null; cache.activity = null; cache.profiles = {};
     loadStories();
   };
 
@@ -1332,6 +1400,7 @@
         </div>
       </div>
     `;
+    cache.profiles[username] = el.innerHTML;
     } catch(e) {
       console.error('loadProfile error:', e);
       el.innerHTML = '<div style="text-align:center;padding:60px;color:#8e8e8e">Could not load profile. Try again.</div>';
@@ -1411,7 +1480,12 @@
     document.querySelectorAll('.bottomnav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'profile'));
     document.querySelectorAll('.sidebar-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'profile'));
     if (pushState) history.pushState({ tab: 'profile', username }, '', '/' + username);
-    loadProfile(username);
+    // Use cached profile HTML if available
+    if (cache.profiles[username]) {
+      document.getElementById('profile-content').innerHTML = cache.profiles[username];
+    } else {
+      loadProfile(username);
+    }
   };
 
   /* ─── URL ROUTING ─── */
