@@ -389,6 +389,37 @@
     .settings-item.danger{color:#ed4956}
     .settings-handle{width:40px;height:4px;background:#dbdbdb;border-radius:2px;margin:8px auto}
     @media(min-width:768px){.settings-handle{display:none}}
+
+    /* ─── MOBILE-EVERYWHERE FRAME ───
+       Keep the phone layout (top bar + bottom tabs) on the web too,
+       centered in a slim phone-width frame instead of the desktop spread. */
+    @media(min-width:768px){
+      body{background:linear-gradient(180deg,#eaf4f7,#dfeef2)}
+      .app{max-width:460px;margin:0 auto;border-left:1px solid #dbdbdb;border-right:1px solid #dbdbdb;box-shadow:0 0 50px rgba(0,0,0,.10)}
+      /* mobile chrome on, desktop sidebar + right rail off */
+      .topnav{display:flex!important}
+      .bottomnav{display:flex!important}
+      .sidebar{display:none!important}
+      .right-sidebar{display:none!important}
+      /* stories + posts go edge-to-edge like on a phone */
+      .stories{border-radius:0;border-left:none;border-right:none;margin:0 0 8px;border-color:#dbdbdb}
+      .post{border-radius:0;border-left:none;border-right:none}
+      /* profile uses the compact mobile presentation */
+      .profile-header{padding:16px 28px 16px 16px;gap:28px;justify-content:flex-start;max-width:none;margin:0}
+      .profile-ava-ring{width:83px;height:83px}
+      .profile-ava{font-size:28px}
+      .profile-stats{border-top:1px solid #dbdbdb;border-bottom:1px solid #dbdbdb;margin:12px -16px;padding:12px 0;justify-content:space-around;gap:0}
+      .profile-stat{margin-right:0;text-align:center;font-size:14px}
+      .profile-stat b{display:block}
+      .profile-highlights{justify-content:flex-start;max-width:none;margin:0;padding:0 16px 16px}
+      .highlight-circle{width:64px;height:64px}
+      /* settings sheet slides up from the bottom, like mobile */
+      .settings-bg.open{align-items:flex-end}
+      .settings-menu{border-radius:12px 12px 0 0}
+      .settings-handle{display:block}
+      /* keep popups phone-width so they sit over the frame */
+      .modal,.edit-modal,.settings-menu{max-width:396px}
+    }
   </style>
 </head>
 <body>
