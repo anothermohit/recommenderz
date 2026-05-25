@@ -739,6 +739,7 @@ if (localStorage.getItem('r_logged_in')) {
   import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, getDocs, arrayUnion, arrayRemove, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
   import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-messaging.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-functions.js";
 
   const app = initializeApp({
     apiKey: "AIzaSyBdOqNXVd3wG3SDz0RWlMr7_udFgMKn6KQ",
@@ -749,9 +750,24 @@ if (localStorage.getItem('r_logged_in')) {
     appId: "1:931987951306:web:b1c1b853eee851e4c52e33",
     databaseURL: "https://recommenderz-app-default-rtdb.asia-southeast1.firebasedatabase.app"
   });
-  const auth = getAuth(app), db = getFirestore(app), rtdb = getDatabase(app);
+  const auth = getAuth(app), db = getFirestore(app), rtdb = getDatabase(app), functions = getFunctions(app);
   let messaging = null;
   try { messaging = getMessaging(app); } catch(e) {}
+
+  // ─── PUSH NOTIFICATIONS (FCM topics) ───
+  // Each user owns a public topic named after their username. Followers
+  // subscribe to it, and a Cloud Function publishes to it on every new
+  // recommendation. Topic (un)subscription needs the Admin SDK, so it goes
+  // through callable functions.
+  // TODO: paste your Web Push certificate key pair here (Firebase console →
+  // Project settings → Cloud Messaging → Web Push certificates). Without it
+  // the browser can't mint an FCM token and notifications stay disabled.
+  const VAPID_KEY = '';
+  let fcmToken = null;
+  const _subscribeFn = httpsCallable(functions, 'subscribeToTopic');
+  const _unsubscribeFn = httpsCallable(functions, 'unsubscribeFromTopic');
+  async function subscribeTopic(topic) { if (!fcmToken || !topic) return; try { await _subscribeFn({ token: fcmToken, topic }); } catch(e) {} }
+  async function unsubscribeTopic(topic) { if (!fcmToken || !topic) return; try { await _unsubscribeFn({ token: fcmToken, topic }); } catch(e) {} }
   let currentUser = null, currentPhotoURL = '', confirmationResult = null;
   window.currentUsername = null;
 
@@ -1209,10 +1225,12 @@ if (localStorage.getItem('r_logged_in')) {
     const r = doc(db, 'Users', currentUser.uid);
     if (btn.textContent === 'Following') {
       await updateDoc(r, { following: arrayRemove(username) });
+      unsubscribeTopic(username);
       btn.textContent = 'Follow'; btn.classList.remove('on');
       showToast(`Unfollowed @${username}`);
     } else {
       await updateDoc(r, { following: arrayUnion(username) });
+      subscribeTopic(username);
       btn.textContent = 'Following'; btn.classList.add('on');
       showToast(`Following @${username}`);
     }
@@ -1277,6 +1295,7 @@ if (localStorage.getItem('r_logged_in')) {
   window.rsFollow = async (username, btn) => {
     const r = doc(db, 'Users', currentUser.uid);
     await updateDoc(r, { following: arrayUnion(username) });
+    subscribeTopic(username);
     btn.textContent = 'Following';
     btn.style.color = '#a8a8a8';
     cache.feed = null; cache.activity = null; cache.profiles = {};
@@ -1313,10 +1332,10 @@ if (localStorage.getItem('r_logged_in')) {
   window.toggleFollow = async (username, btn) => {
     const r = doc(db, 'Users', currentUser.uid);
     if (btn.textContent === 'Following') {
-      await updateDoc(r, { following: arrayRemove(username) }); btn.textContent = 'Follow'; btn.classList.remove('on');
+      await updateDoc(r, { following: arrayRemove(username) }); unsubscribeTopic(username); btn.textContent = 'Follow'; btn.classList.remove('on');
       showToast(`Unfollowed @${username}`);
     } else {
-      await updateDoc(r, { following: arrayUnion(username) }); btn.textContent = 'Following'; btn.classList.add('on');
+      await updateDoc(r, { following: arrayUnion(username) }); subscribeTopic(username); btn.textContent = 'Following'; btn.classList.add('on');
       showToast(`Following @${username}`);
     }
     cache.feed = null; cache.activity = null; cache.profiles = {};
@@ -1334,8 +1353,27 @@ if (localStorage.getItem('r_logged_in')) {
 
   async function requestNotificationPermission() {
     if (!messaging) return;
-    try { const p = await Notification.requestPermission(); if (p === 'granted') { const t = await getToken(messaging, { vapidKey: '' }); if (t) await updateDoc(doc(db, 'Users', currentUser.uid), { fcmToken: t }); } } catch(e) {}
-    if (messaging) onMessage(messaging, p => { if (p.data?.videoId) loadFeed(); });
+    // Foreground messages: toast + refresh the feed so the new rec shows.
+    onMessage(messaging, p => {
+      const u = p.data?.username || p.notification?.title || 'Someone';
+      showToast(`${u} recommended a video`);
+      if (p.data?.videoId) { cache.feed = null; if (document.getElementById('tab-feed').classList.contains('on')) loadFeed(); }
+    });
+    if (!VAPID_KEY) return; // no Web Push key configured yet
+    try {
+      if (Notification.permission === 'denied') return;
+      const p = await Notification.requestPermission();
+      if (p !== 'granted') return;
+      const swReg = await navigator.serviceWorker.ready;
+      fcmToken = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+      if (!fcmToken) return;
+      await updateDoc(doc(db, 'Users', currentUser.uid), { fcmToken });
+      // Subscribe this device to every followed user's topic (covers follows
+      // made on other devices or before notifications were granted).
+      const d = await getDoc(doc(db, 'Users', currentUser.uid));
+      const following = d.exists() ? (d.data().following || []) : [];
+      await Promise.all(following.map(subscribeTopic));
+    } catch(e) { console.warn('Notifications unavailable:', e?.message || e); }
   }
 
   /* ─── PROFILE ─── */
@@ -1466,10 +1504,12 @@ if (localStorage.getItem('r_logged_in')) {
     const r = doc(db, 'Users', currentUser.uid);
     if (btn.textContent === 'Following') {
       await updateDoc(r, { following: arrayRemove(username) });
+      unsubscribeTopic(username);
       btn.textContent = 'Follow'; btn.classList.remove('following');
       showToast(`Unfollowed @${username}`);
     } else {
       await updateDoc(r, { following: arrayUnion(username) });
+      subscribeTopic(username);
       btn.textContent = 'Following'; btn.classList.add('following');
       showToast(`Following @${username}`);
     }
