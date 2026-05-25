@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, signOut, ConfirmationResult } from 'firebase/auth';
+import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, signOut, signInAnonymously, ConfirmationResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import type { UserDoc } from '../lib/types';
@@ -11,6 +11,7 @@ interface AuthState {
   username: string | null;
   photoURL: string;
   signInWithGoogle: () => Promise<void>;
+  signInAsGuest: (password: string) => Promise<string | null>;
   showPhoneInput: boolean;
   setShowPhoneInput: (v: boolean) => void;
   sendOTP: (phone: string) => Promise<void>;
@@ -73,6 +74,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (_e) { /* user closed popup */ }
   }, []);
 
+  const doSignInAsGuest = useCallback(async (password: string): Promise<string | null> => {
+    if (password !== '123') return 'Incorrect password';
+    try {
+      await signInAnonymously(auth);
+      return null;
+    } catch (e: any) {
+      return e.message || 'Guest login failed';
+    }
+  }, []);
+
   const sendOTP = useCallback(async (phone: string) => {
     if (!phone) return;
     if (recaptchaRef.current) recaptchaRef.current.clear();
@@ -125,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user, userDoc, loading, username, photoURL,
       signInWithGoogle: doSignInWithGoogle,
+      signInAsGuest: doSignInAsGuest,
       showPhoneInput, setShowPhoneInput,
       sendOTP, verifyOTP,
       saveUsername: saveUsernameAction,

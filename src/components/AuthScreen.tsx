@@ -3,12 +3,20 @@ import { useAuth } from '../context/AuthContext';
 import { GoogleIcon } from './Icons';
 
 export default function AuthScreen() {
-  const { signInWithGoogle, sendOTP, verifyOTP } = useAuth();
+  const { signInWithGoogle, signInAsGuest, sendOTP, verifyOTP } = useAuth();
   const [showPhone, setShowPhone] = useState(false);
+  const [showGuest, setShowGuest] = useState(false);
+  const [guestPassword, setGuestPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+
+  const handleGuestLogin = async () => {
+    setError('');
+    const err = await signInAsGuest(guestPassword);
+    if (err) setError(err);
+  };
 
   const handleSendOTP = async () => {
     if (!phone) return;
@@ -71,10 +79,29 @@ export default function AuthScreen() {
               )}
             </>
           )}
-          {!showPhone && (
-            <button onClick={() => setShowPhone(true)} className="auth-phone-link">
-              Log in with phone number
-            </button>
+          {showGuest && (
+            <>
+              <input
+                type="password"
+                className="auth-input"
+                placeholder="Enter guest password"
+                value={guestPassword}
+                onChange={e => setGuestPassword(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleGuestLogin(); }}
+              />
+              <button onClick={handleGuestLogin} className="auth-btn">Enter</button>
+            </>
+          )}
+          {!showPhone && !showGuest && (
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button onClick={() => setShowPhone(true)} className="auth-phone-link">
+                Log in with phone
+              </button>
+              <span style={{ color: '#c7c7c7' }}>|</span>
+              <button onClick={() => setShowGuest(true)} className="auth-phone-link">
+                Guest login
+              </button>
+            </div>
           )}
           {error && <div className="uname-err">{error}</div>}
           <div id="recaptcha-container" />
