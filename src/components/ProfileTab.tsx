@@ -12,6 +12,12 @@ import VideoReel from './VideoReel';
 import { SkeletonProfile, SkeletonReel } from './Skeleton';
 import type { Rec, UserDoc } from '../lib/types';
 
+interface UserListItem {
+  username: string;
+  photoURL: string;
+  displayName: string;
+}
+
 export default function ProfileTab() {
   const { username: paramUsername } = useParams<{ username: string }>();
   const { user, username: myUsername, photoURL: myPhotoURL } = useAuth();
@@ -19,16 +25,18 @@ export default function ProfileTab() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const profileUsername = paramUsername || myUsername || '';
+  const profileUsername = (paramUsername || myUsername || '').toLowerCase();
 
   const [userData, setUserData] = useState<UserDoc | null>(null);
   const [posts, setPosts] = useState<Rec[]>([]);
-  const [followersCount, setFollowersCount] = useState(0);
+  const [followers, setFollowers] = useState<UserListItem[]>([]);
+  const [followingList, setFollowingList] = useState<UserListItem[]>([]);
   const [mutuals, setMutuals] = useState<string[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [listModal, setListModal] = useState<'followers' | 'following' | null>(null);
 
   const isOwn = userData && user ? (profileUsername === myUsername) : false;
 
@@ -37,10 +45,11 @@ export default function ProfileTab() {
     setLoading(true);
 
     try {
-      // Find user
+      // Find user by username
       const uq = query(collection(db, 'Users'), where('username', '==', profileUsername), limit(1));
       const us = await getDocs(uq);
       if (us.empty) {
+        console.warn('[Profile] No user found with username:', profileUsername);
         setUserData(null);
         setLoading(false);
         return;
@@ -49,40 +58,87 @@ export default function ProfileTab() {
       setUserData(ud);
       setUserPhoto(profileUsername, ud.photoURL || '');
 
-      // Get posts
+      // Get posts from Recommendations collection
       let postsList: Rec[] = [];
       try {
-        const pq = query(collection(db, 'Recommendations'), where('username', '==', profileUsername), orderBy('timestamp', 'desc'));
+        const pq = query(
+          collection(db, 'Recommendations'),
+          where('username', '==', profileUsername),
+          orderBy('timestamp', 'desc')
+        );
         const ps = await getDocs(pq);
-        ps.forEach(d => postsList.push(d.data() as Rec));
-      } catch {
+        ps.forEach(d => postsList.push({ ...d.data(), id: d.id } as Rec));
+        console.log('[Profile] Posts loaded (indexed):', postsList.length);
+      } catch (e) {
+        console.warn('[Profile] Indexed query failed, trying without orderBy:', e);
         try {
-          const pq2 = query(collection(db, 'Recommendations'), where('username', '==', profileUsername));
+          const pq2 = query(
+            collection(db, 'Recommendations'),
+            where('username', '==', profileUsername)
+          );
           const ps2 = await getDocs(pq2);
-          ps2.forEach(d => postsList.push(d.data() as Rec));
+          ps2.forEach(d => postsList.push({ ...d.data(), id: d.id } as Rec));
           postsList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        } catch { /* noop */ }
+          console.log('[Profile] Posts loaded (fallback):', postsList.length);
+        } catch (e2) {
+          console.error('[Profile] Both post queries failed:', e2);
+        }
       }
       setPosts(postsList);
 
-      // Get followers count
-      const followerUsernames: string[] = [];
+      // Get followers (users whose following array contains this username)
+      const followerItems: UserListItem[] = [];
       try {
         const fq = query(collection(db, 'Users'), where('following', 'array-contains', profileUsername));
         const fs = await getDocs(fq);
-        setFollowersCount(fs.size);
         fs.forEach(d => {
           const data = d.data() as UserDoc;
-          if (data.username !== myUsername) followerUsernames.push(data.username);
+          followerItems.push({
+            username: data.username,
+            photoURL: data.photoURL || '',
+            displayName: data.displayName || data.username,
+          });
         });
-      } catch { /* noop */ }
+      } catch (e) {
+        console.warn('[Profile] Followers query failed:', e);
+      }
+      setFollowers(followerItems);
 
-      // My following
+      // Load following list (resolve usernames to user docs)
+      const followingUsernames: string[] = ud.following || [];
+      const followingItems: UserListItem[] = [];
+      if (followingUsernames.length > 0) {
+        // Firestore 'in' supports max 30 items per query
+        for (let i = 0; i < followingUsernames.length; i += 30) {
+          const batch = followingUsernames.slice(i, i + 30);
+          try {
+            const fq = query(collection(db, 'Users'), where('username', 'in', batch));
+            const fs = await getDocs(fq);
+            fs.forEach(d => {
+              const data = d.data() as UserDoc;
+              followingItems.push({
+                username: data.username,
+                photoURL: data.photoURL || '',
+                displayName: data.displayName || data.username,
+              });
+            });
+          } catch (e) {
+            console.warn('[Profile] Following query failed for batch:', e);
+          }
+        }
+      }
+      setFollowingList(followingItems);
+
+      // My following (for follow button state + mutuals)
       const myDoc = await getDoc(doc(db, 'Users', user.uid));
       const myFollowing: string[] = myDoc.exists() ? (myDoc.data().following || []) : [];
       setIsFollowing(myFollowing.includes(profileUsername));
+      const followerUsernames = followerItems
+        .map(f => f.username)
+        .filter(u => u !== myUsername);
       setMutuals(followerUsernames.filter(u => myFollowing.includes(u)));
-    } catch {
+    } catch (e) {
+      console.error('[Profile] Load failed:', e);
       setUserData(null);
     }
     setLoading(false);
@@ -98,12 +154,12 @@ export default function ProfileTab() {
     if (isFollowing) {
       await updateDoc(r, { following: arrayRemove(profileUsername) });
       setIsFollowing(false);
-      setFollowersCount(prev => prev - 1);
+      setFollowers(prev => prev.filter(f => f.username !== myUsername));
       showToast(`Unfollowed @${profileUsername}`);
     } else {
       await updateDoc(r, { following: arrayUnion(profileUsername) });
       setIsFollowing(true);
-      setFollowersCount(prev => prev + 1);
+      setFollowers(prev => [...prev, { username: myUsername || '', photoURL: myPhotoURL || '', displayName: myUsername || '' }]);
       showToast(`Following @${profileUsername}`);
     }
     cache.current.feed = null;
@@ -152,6 +208,9 @@ export default function ProfileTab() {
   const followingCount = (userData.following || []).length;
   const initial = profileUsername[0].toUpperCase();
 
+  const listItems = listModal === 'followers' ? followers : followingList;
+  const listTitle = listModal === 'followers' ? 'Followers' : 'Following';
+
   return (
     <>
       {/* Profile info card */}
@@ -183,8 +242,12 @@ export default function ProfileTab() {
 
           <div className="rp-stats">
             <div><b>{posts.length}</b><span>posts</span></div>
-            <div><b>{followersCount}</b><span>followers</span></div>
-            <div><b>{followingCount}</b><span>following</span></div>
+            <div onClick={() => setListModal('followers')} style={{ cursor: 'pointer' }}>
+              <b>{followers.length}</b><span>followers</span>
+            </div>
+            <div onClick={() => setListModal('following')} style={{ cursor: 'pointer' }}>
+              <b>{followingCount}</b><span>following</span>
+            </div>
           </div>
 
           <div className="rp-actions">
@@ -236,6 +299,53 @@ export default function ProfileTab() {
             <p>{isOwn ? 'When you share recommendations, they will appear on your profile.' : "This user hasn't shared any recommendations yet."}</p>
           </div>
         </section>
+      )}
+
+      {/* Followers / Following List Modal */}
+      {listModal && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setListModal(null); }}>
+          <div className="modal" style={{ maxWidth: 400 }}>
+            <div className="modal-head">
+              <h3>{listTitle}</h3>
+              <button onClick={() => setListModal(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', padding: '4px 8px', color: '#262626' }}>&times;</button>
+            </div>
+            <div style={{ maxHeight: 400, overflowY: 'auto', padding: '8px 16px' }}>
+              {listItems.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 32, color: '#8e8e8e' }}>
+                  {listModal === 'followers' ? 'No followers yet' : 'Not following anyone'}
+                </div>
+              ) : (
+                listItems.map(item => (
+                  <div
+                    key={item.username}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #efefef', cursor: 'pointer' }}
+                    onClick={() => { setListModal(null); navigate('/' + item.username); }}
+                  >
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#efefef', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 18, fontWeight: 600, color: '#262626', flexShrink: 0 }}>
+                      {item.photoURL ? <img src={item.photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : item.username[0].toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#262626' }}>{item.username}</div>
+                      <div style={{ fontSize: 13, color: '#8e8e8e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.displayName}</div>
+                    </div>
+                    {item.username !== myUsername && (
+                      <button
+                        className="profile-follow-btn"
+                        style={{ padding: '6px 16px', fontSize: 13 }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          navigate('/' + item.username);
+                        }}
+                      >
+                        View
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modals */}
