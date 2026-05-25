@@ -5,7 +5,7 @@ import { messaging, functions, db } from './firebase';
 
 // Get this from Firebase Console → Project settings → Cloud Messaging → Web Push certificates
 // Generate a key pair if none exists, then paste the public key here.
-const VAPID_KEY = '';
+const VAPID_KEY = 'BDCYoaJNIPNwP1M_xj7prCQpl3GOY-zu7JFIrjQGeUzFi8p61vpTwuYY8CMzOv-hValf9DChkH1Cfk5ios1wxro';
 
 let cachedToken: string | null = null;
 
