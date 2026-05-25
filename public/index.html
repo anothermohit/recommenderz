@@ -390,35 +390,72 @@
     .settings-handle{width:40px;height:4px;background:#dbdbdb;border-radius:2px;margin:8px auto}
     @media(min-width:768px){.settings-handle{display:none}}
 
-    /* ─── MOBILE-EVERYWHERE FRAME ───
-       Keep the phone layout (top bar + bottom tabs) on the web too,
-       centered in a slim phone-width frame instead of the desktop spread. */
+    /* ═══════════ REELS LAYOUT ═══════════
+       Every view is a vertical stack of full-screen cards — one per screen,
+       scaled to the viewport width. The first card of each view is "special"
+       (feed = logo + stories, profile = user info). Bottom tabs everywhere;
+       the old top bar + desktop sidebar are gone (header lives in the card). */
+    body{background:#000}
+    .topnav{display:none!important}
+    .sidebar{display:none!important}
+    .right-sidebar-old{display:none!important}
+    .bottomnav{display:flex!important}
+
+    .app-body{min-height:0}
+    .main-area{height:100%;overflow:hidden;background:#000}
+    .feed-layout,.feed-col{display:block;max-width:none;width:auto;padding:0;margin:0}
+    /* wrappers must not break the card-height chain — reels resolve against the tab */
+    #feed-list,#profile-content,#profile-reels,#explore-grid-container{display:contents}
+
+    /* the active view is the scroll-snap viewport */
+    .tab{animation:none}
+    .tab.on{display:block;height:100%;overflow-y:scroll;overflow-x:hidden;
+            scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .tab.on::-webkit-scrollbar{display:none}
+
+    /* one card = one screen, centred, capped on wide screens */
+    .reel{position:relative;width:100%;max-width:600px;margin:0 auto;height:100%;
+          scroll-snap-align:start;scroll-snap-stop:always;
+          display:flex;flex-direction:column;background:#fff;overflow:hidden}
+
+    /* video / post card */
+    .reel-head{display:flex;align-items:center;gap:10px;padding:12px;flex-shrink:0}
+    .reel-media{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+                background:#000;position:relative;-webkit-user-select:none;user-select:none}
+    .reel-media iframe{width:100%;aspect-ratio:16/9;max-height:100%;border:none}
+    .reel-foot{flex-shrink:0;padding:6px 0 calc(8px + env(safe-area-inset-bottom))}
+    .reel-foot .post-actions{padding:2px 8px}
+    .reel-foot .post-meta{padding:0 14px}
+    .reel-foot .caption{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+    /* special card (header / status / profile / search) */
+    .reel-bar{display:flex;align-items:center;gap:18px;padding:14px 16px;flex-shrink:0;border-bottom:1px solid #efefef}
+    .reel-bar .topnav-logo{font-size:24px;flex:1}
+    .reel-bar button{background:none;border:none;display:flex;padding:0;position:relative}
+    .reel-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+    .reel-scroll::-webkit-scrollbar{display:none}
+
+    /* profile info card */
+    .rp-top{display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 24px 0}
+    .rp-uname{font-size:20px;font-weight:700;margin-top:14px;color:#262626}
+    .rp-name{font-size:14px;color:#8e8e8e;margin-top:2px}
+    .rp-bio{font-size:14px;color:#262626;margin-top:10px;line-height:1.4;max-width:360px}
+    .rp-web{font-size:14px;margin-top:6px}
+    .rp-web a{color:#00376b;font-weight:600}
+    .rp-stats{display:flex;justify-content:space-around;margin:22px 24px;padding:16px 0;border-top:1px solid #dbdbdb;border-bottom:1px solid #dbdbdb}
+    .rp-stats>div{display:flex;flex-direction:column;align-items:center;cursor:default}
+    .rp-stats b{font-size:20px;font-weight:700;color:#262626}
+    .rp-stats span{font-size:13px;color:#8e8e8e;margin-top:2px}
+    .rp-actions{display:flex;gap:10px;justify-content:center;padding:0 24px 28px;flex-wrap:wrap}
+    .rp-hint{text-align:center;color:#8e8e8e;font-size:12px;padding:0 0 16px;display:flex;flex-direction:column;align-items:center;gap:6px}
+
+    /* settings sheet + popups */
+    .settings-bg.open{align-items:flex-end}
     @media(min-width:768px){
-      body{background:linear-gradient(180deg,#eaf4f7,#dfeef2)}
-      .app{max-width:460px;margin:0 auto;border-left:1px solid #dbdbdb;border-right:1px solid #dbdbdb;box-shadow:0 0 50px rgba(0,0,0,.10)}
-      /* mobile chrome on, desktop sidebar + right rail off */
-      .topnav{display:flex!important}
-      .bottomnav{display:flex!important}
-      .sidebar{display:none!important}
-      .right-sidebar{display:none!important}
-      /* stories + posts go edge-to-edge like on a phone */
-      .stories{border-radius:0;border-left:none;border-right:none;margin:0 0 8px;border-color:#dbdbdb}
-      .post{border-radius:0;border-left:none;border-right:none}
-      /* profile uses the compact mobile presentation */
-      .profile-header{padding:16px 28px 16px 16px;gap:28px;justify-content:flex-start;max-width:none;margin:0}
-      .profile-ava-ring{width:83px;height:83px}
-      .profile-ava{font-size:28px}
-      .profile-stats{border-top:1px solid #dbdbdb;border-bottom:1px solid #dbdbdb;margin:12px -16px;padding:12px 0;justify-content:space-around;gap:0}
-      .profile-stat{margin-right:0;text-align:center;font-size:14px}
-      .profile-stat b{display:block}
-      .profile-highlights{justify-content:flex-start;max-width:none;margin:0;padding:0 16px 16px}
-      .highlight-circle{width:64px;height:64px}
-      /* settings sheet slides up from the bottom, like mobile */
       .settings-bg.open{align-items:flex-end}
-      .settings-menu{border-radius:12px 12px 0 0}
+      .settings-menu{border-radius:12px 12px 0 0;max-width:600px}
       .settings-handle{display:block}
-      /* keep popups phone-width so they sit over the frame */
-      .modal,.edit-modal,.settings-menu{max-width:396px}
+      .modal,.edit-modal{max-width:480px}
     }
   </style>
 </head>
@@ -541,9 +578,20 @@ if (localStorage.getItem('r_logged_in')) {
     <div class="main-area" id="main-area">
       <!-- FEED TAB -->
       <div id="tab-feed" class="tab on">
-        <div class="ptr-indicator" id="ptr-indicator">Pull to refresh</div>
-        <div class="feed-layout">
-          <div class="feed-col">
+        <!-- special card: header + status -->
+        <section class="reel reel-special">
+          <div class="reel-bar">
+            <div class="topnav-logo">Recommenderz</div>
+            <button onclick="goTab('activity')" aria-label="Activity">
+              <svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <div class="topnav-badge" id="topnav-activity-badge" style="display:none"></div>
+            </button>
+            <button onclick="openCreate()" aria-label="Share">
+              <svg width="24" height="24" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="reel-scroll">
+            <div class="ptr-indicator" id="ptr-indicator">Pull to refresh</div>
             <div id="stories-bar" class="stories">
               <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
               <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
@@ -551,69 +599,64 @@ if (localStorage.getItem('r_logged_in')) {
               <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
               <div class="story"><div class="story-ring empty"><div class="story-ava skeleton skeleton-circle" style="width:100%;height:100%;border:none"></div></div><div class="skeleton" style="width:40px;height:10px;margin:0 auto"></div></div>
             </div>
-            <div id="feed-list">
-              <div class="skeleton-post"><div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div><div class="sk-media skeleton"></div><div class="sk-text skeleton"></div></div>
-              <div class="skeleton-post"><div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div><div class="sk-media skeleton"></div><div class="sk-text skeleton"></div></div>
-              <div class="skeleton-post"><div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div><div class="sk-media skeleton"></div><div class="sk-text skeleton"></div></div>
-            </div>
+            <div id="right-sidebar" style="padding:8px 16px 24px"></div>
           </div>
-          <div class="right-sidebar" id="right-sidebar">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div><div class="skeleton" style="width:100px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:70px;height:10px"></div></div></div>
-            <div class="skeleton" style="width:140px;height:12px;margin-bottom:16px"></div>
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div><div class="skeleton" style="width:80px;height:11px;margin-bottom:4px"></div><div class="skeleton" style="width:60px;height:9px"></div></div></div>
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div><div class="skeleton" style="width:90px;height:11px;margin-bottom:4px"></div><div class="skeleton" style="width:60px;height:9px"></div></div></div>
-          </div>
+        </section>
+        <!-- video reels -->
+        <div id="feed-list">
+          <section class="reel">
+            <div class="reel-head"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div class="skeleton" style="width:120px;height:12px"></div></div>
+            <div class="skeleton" style="flex:1;min-height:0"></div>
+            <div class="reel-foot"><div class="skeleton" style="width:200px;height:12px;margin:12px 14px"></div></div>
+          </section>
         </div>
       </div>
 
       <!-- PROFILE TAB -->
       <div id="tab-profile" class="tab">
         <div id="profile-content">
-          <div class="profile-header">
-            <div class="profile-ava-wrap"><div class="skeleton skeleton-circle" style="width:77px;height:77px"></div></div>
-            <div class="profile-info" style="flex:1">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton" style="width:120px;height:18px"></div><div class="skeleton" style="width:90px;height:32px;border-radius:8px"></div></div>
-              <div style="display:flex;gap:30px;margin-bottom:16px"><div class="skeleton" style="width:60px;height:14px"></div><div class="skeleton" style="width:70px;height:14px"></div><div class="skeleton" style="width:70px;height:14px"></div></div>
-              <div class="skeleton" style="width:100px;height:12px;margin-bottom:6px"></div>
-              <div class="skeleton" style="width:180px;height:12px"></div>
+          <section class="reel reel-profile"><div class="reel-scroll">
+            <div class="rp-top">
+              <div class="skeleton skeleton-circle" style="width:88px;height:88px"></div>
+              <div class="skeleton" style="width:120px;height:18px;margin-top:16px"></div>
+              <div class="skeleton" style="width:90px;height:12px;margin-top:8px"></div>
             </div>
-          </div>
-          <div style="border-top:1px solid #dbdbdb;display:flex;justify-content:center;gap:3px;padding:16px 3px">
-            <div class="skeleton" style="width:33%;aspect-ratio:1"></div>
-            <div class="skeleton" style="width:33%;aspect-ratio:1"></div>
-            <div class="skeleton" style="width:33%;aspect-ratio:1"></div>
-          </div>
+            <div class="rp-stats"><div class="skeleton" style="width:48px;height:34px"></div><div class="skeleton" style="width:48px;height:34px"></div><div class="skeleton" style="width:48px;height:34px"></div></div>
+          </div></section>
         </div>
       </div>
 
       <!-- EXPLORE TAB -->
       <div id="tab-explore" class="tab">
-        <div style="max-width:600px;margin:0 auto">
-          <div class="search-wrap">
+        <section class="reel reel-special">
+          <div class="reel-bar" style="border-bottom:none;padding-bottom:6px"><div class="topnav-logo" style="font-size:20px">Explore</div></div>
+          <div class="search-wrap" style="position:static">
             <div class="search-wrap-inner">
               <svg class="search-icon" width="16" height="16" fill="none" stroke="#8e8e8e" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
               <input type="text" id="user-search" class="search-box" placeholder="Search" oninput="searchUsers()">
             </div>
           </div>
-          <div id="user-results"></div>
-          <div id="explore-grid-container">
-            <div class="explore-grid">
-              <div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div>
-              <div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div>
-              <div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div><div class="skeleton" style="aspect-ratio:1"></div>
-            </div>
-          </div>
+          <div class="reel-scroll"><div id="user-results"></div></div>
+        </section>
+        <div id="explore-grid-container">
+          <section class="reel">
+            <div class="reel-head"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div class="skeleton" style="width:120px;height:12px"></div></div>
+            <div class="skeleton" style="flex:1;min-height:0"></div>
+            <div class="reel-foot"><div class="skeleton" style="width:200px;height:12px;margin:12px 14px"></div></div>
+          </section>
         </div>
       </div>
 
       <!-- ACTIVITY TAB -->
       <div id="tab-activity" class="tab">
-        <div style="max-width:600px;margin:0 auto">
-          <div class="activity-header">Notifications</div>
-          <div id="activity-content">
-            <div style="padding:12px 16px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div style="flex:1"><div class="skeleton" style="width:200px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:60px;height:10px"></div></div></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div style="flex:1"><div class="skeleton" style="width:180px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:50px;height:10px"></div></div></div></div>
+        <section class="reel reel-special">
+          <div class="reel-bar"><div class="topnav-logo" style="font-size:20px">Notifications</div></div>
+          <div class="reel-scroll">
+            <div id="activity-content">
+              <div style="padding:12px 16px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div style="flex:1"><div class="skeleton" style="width:200px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:60px;height:10px"></div></div></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="skeleton skeleton-circle" style="width:44px;height:44px"></div><div style="flex:1"><div class="skeleton" style="width:180px;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:50px;height:10px"></div></div></div></div>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   </div>
@@ -752,15 +795,59 @@ if (localStorage.getItem('r_logged_in')) {
   // Feed skeleton loader
   function showFeedSkeleton() {
     const el = document.getElementById('feed-list');
-    let html = '';
-    for (let i = 0; i < 3; i++) {
-      html += `<div class="skeleton-post">
-        <div class="sk-header"><div class="sk-ava skeleton skeleton-circle"></div><div class="sk-name skeleton"></div></div>
-        <div class="sk-media skeleton"></div>
-        <div class="sk-text skeleton"></div>
+    el.innerHTML = `<section class="reel">
+      <div class="reel-head"><div class="skeleton skeleton-circle" style="width:32px;height:32px"></div><div class="skeleton" style="width:120px;height:12px"></div></div>
+      <div class="skeleton" style="flex:1;min-height:0"></div>
+      <div class="reel-foot"><div class="skeleton" style="width:200px;height:12px;margin:12px 14px"></div></div>
+    </section>`;
+  }
+
+  // Build one full-screen video card (used by feed, profile and explore).
+  function makeVideoReel(r) {
+    const photo = userPhotoCache[r.username] || '';
+    const ava = photo ? `<img src="${photo}" alt="">` : (r.username ? r.username[0].toUpperCase() : '?');
+    const postId = r.id || (r.videoId + r.timestamp);
+    const isLiked = likedPosts.has(postId);
+    const caption = (r.caption || 'shared a video recommendation');
+    const el = document.createElement('section');
+    el.className = 'reel';
+    el.innerHTML = `
+      <div class="reel-head">
+        <div class="post-ava-ring" onclick="viewProfile('${r.username}')"><div class="post-ava">${ava}</div></div>
+        <div class="post-user" onclick="viewProfile('${r.username}')">${r.username}</div>
+        <button class="post-dot">&#8226;&#8226;&#8226;</button>
+      </div>
+      <div class="reel-media" data-post-id="${postId}"><iframe src="https://www.youtube.com/embed/${r.videoId}" allow="encrypted-media" allowfullscreen loading="lazy"></iframe></div>
+      <div class="reel-foot">
+        <div class="post-actions">
+          <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(this,'${postId}')"><svg width="24" height="24" fill="${isLiked ? '#ed4956' : 'none'}" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
+          <button onclick="window.open('https://youtube.com/watch?v=${r.videoId}','_blank')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+          <button onclick="shareVideo('${r.videoId}')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          <button class="right"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
+        </div>
+        <div class="post-meta">
+          <div class="caption"><b onclick="viewProfile('${r.username}')">${r.username}</b> <span>${caption}</span></div>
+          <div class="time">${timeAgo(r.timestamp)}</div>
+        </div>
       </div>`;
-    }
-    el.innerHTML = html;
+    // Double-tap to like
+    let lastTap = 0;
+    const mediaEl = el.querySelector('.reel-media');
+    mediaEl.addEventListener('click', (e) => {
+      if (e.target.tagName === 'IFRAME') return;
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        const likeBtn = el.querySelector('.like-btn');
+        if (!likedPosts.has(postId)) toggleLike(likeBtn, postId);
+        const overlay = document.createElement('div');
+        overlay.className = 'heart-overlay';
+        overlay.innerHTML = '<svg width="80" height="80" fill="#ed4956" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+        mediaEl.appendChild(overlay);
+        setTimeout(() => overlay.remove(), 800);
+      }
+      lastTap = now;
+    });
+    return el;
   }
 
   window.signInWithGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e) {} };
@@ -826,7 +913,9 @@ if (localStorage.getItem('r_logged_in')) {
 
   window.goTab = (tab, pushState = true) => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-    document.getElementById('tab-' + tab).classList.add('on');
+    const tabEl = document.getElementById('tab-' + tab);
+    tabEl.classList.add('on');
+    tabEl.scrollTop = 0; // start on the special (top) card
     document.querySelectorAll('.bottomnav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     document.querySelectorAll('.sidebar-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     if (tab === 'feed') {
@@ -927,11 +1016,11 @@ if (localStorage.getItem('r_logged_in')) {
     const d = await getDoc(doc(db, 'Users', currentUser.uid));
     const following = d.exists() ? (d.data().following || []) : [];
     if (!following.length) {
-      el.innerHTML = `<div class="feed-empty">
+      el.innerHTML = `<section class="reel" style="justify-content:center"><div class="feed-empty">
         <svg class="feed-empty-icon" width="80" height="80" fill="none" stroke="#262626" stroke-width="1" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         <h3>Welcome to Recommenderz</h3>
         <p>Follow people to see their video recommendations here.<br><br>Use the search tab to find people to follow.</p>
-      </div>`;
+      </div></section>`;
       cache.feed = true;
       return;
     }
@@ -947,69 +1036,14 @@ if (localStorage.getItem('r_logged_in')) {
       (await getDocs(q)).forEach(d => all.push({ ...d.data(), id: d.id }));
     }
     all.sort((a, b) => b.timestamp - a.timestamp); all = all.slice(0, 20);
-    if (!all.length) { el.innerHTML = '<div class="feed-empty"><p style="color:#a8a8a8">No recommendations yet from people you follow.</p></div>'; return; }
+    if (!all.length) { el.innerHTML = '<section class="reel" style="justify-content:center"><div class="feed-empty"><p style="color:#a8a8a8">No recommendations yet from people you follow.</p></div></section>'; return; }
 
     // Prefetch photos
     const uniqueUsers = [...new Set(all.map(r => r.username))];
     await Promise.all(uniqueUsers.map(u => getUserPhoto(u)));
 
     el.innerHTML = '';
-    for (const r of all) {
-      const photo = userPhotoCache[r.username] || '';
-      const avaContent = photo ? `<img src="${photo}" alt="">` : r.username[0].toUpperCase();
-      const postId = r.id || r.videoId + r.timestamp;
-      const isLiked = likedPosts.has(postId);
-      const likeCount = Math.floor(Math.random() * 50) + (isLiked ? 1 : 0); // Simulated count
-      const caption = r.caption || 'shared a video recommendation';
-      const truncCaption = caption.length > 80 ? caption.substring(0, 80) : caption;
-      const needsMore = caption.length > 80;
-
-      const article = document.createElement('article');
-      article.className = 'post';
-      article.innerHTML = `
-        <div class="post-head">
-          <div class="post-ava-ring" onclick="viewProfile('${r.username}')"><div class="post-ava">${avaContent}</div></div>
-          <div class="post-user" onclick="viewProfile('${r.username}')">${r.username}</div>
-          <button class="post-dot">&#8226;&#8226;&#8226;</button>
-        </div>
-        <div class="post-media" data-post-id="${postId}"><iframe src="https://www.youtube.com/embed/${r.videoId}" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>
-        <div class="post-actions">
-          <button class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${postId}" onclick="toggleLike(this,'${postId}')"><svg width="24" height="24" fill="${isLiked ? '#ed4956' : 'none'}" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
-          <button><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
-          <button onclick="shareVideo('${r.videoId}')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
-          <button class="right"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
-        </div>
-        <div class="post-meta">
-          <div class="post-likes" data-post-id="${postId}">${likeCount > 0 ? `${likeCount} like${likeCount !== 1 ? 's' : ''}` : ''}</div>
-          <div class="caption"><b onclick="viewProfile('${r.username}')">${r.username}</b> <span class="caption-text">${needsMore ? truncCaption + '...' : caption}</span>${needsMore ? ` <button class="caption-more" onclick="this.previousElementSibling.textContent='${caption.replace(/'/g, "\\'")}';this.remove()">more</button>` : ''}</div>
-          <div class="time">${timeAgo(r.timestamp)}</div>
-        </div>
-      `;
-
-      // Double-tap to like
-      let lastTap = 0;
-      const mediaEl = article.querySelector('.post-media');
-      mediaEl.addEventListener('click', (e) => {
-        if (e.target.tagName === 'IFRAME') return;
-        const now = Date.now();
-        if (now - lastTap < 300) {
-          // Double tap
-          const likeBtn = article.querySelector('.like-btn');
-          if (!likedPosts.has(postId)) {
-            toggleLike(likeBtn, postId);
-          }
-          // Heart animation
-          const overlay = document.createElement('div');
-          overlay.className = 'heart-overlay';
-          overlay.innerHTML = '<svg width="80" height="80" fill="#ed4956" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
-          mediaEl.appendChild(overlay);
-          setTimeout(() => overlay.remove(), 800);
-        }
-        lastTap = now;
-      });
-
-      el.appendChild(article);
-    }
+    for (const r of all) el.appendChild(makeVideoReel(r));
     cache.feed = true;
     } catch(e) {
       console.error('loadFeed error:', e);
@@ -1071,31 +1105,21 @@ if (localStorage.getItem('r_logged_in')) {
       snap.forEach(d => recs.push(d.data()));
 
       if (!recs.length) {
-        container.innerHTML = `<div class="activity-empty">
+        container.innerHTML = `<section class="reel" style="justify-content:center"><div class="activity-empty">
           <div class="activity-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
           <h3>Discover Videos</h3>
           <p>Recommendations from the community will appear here.</p>
-        </div>`;
+        </div></section>`;
         return;
       }
 
-      let gridHtml = '<div class="explore-grid">';
-      recs.forEach((r, i) => {
-        // Every 10th item starting at index 0 is large (spans 2x2)
-        const isLarge = (i % 10 === 0);
-        gridHtml += `<div class="explore-grid-item ${isLarge ? 'large' : ''}" onclick="window.open('https://youtube.com/watch?v=${r.videoId}','_blank')">
-          <img src="https://img.youtube.com/vi/${r.videoId}/${isLarge ? 'hqdefault' : 'mqdefault'}.jpg" alt="" loading="lazy">
-          <div class="explore-overlay">
-            <svg class="explore-play" width="${isLarge ? 48 : 32}" height="${isLarge ? 48 : 32}" fill="white" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </div>
-          <div class="explore-user">@${r.username}</div>
-        </div>`;
-      });
-      gridHtml += '</div>';
-      container.innerHTML = gridHtml;
+      const uniqueUsers = [...new Set(recs.map(r => r.username))];
+      await Promise.all(uniqueUsers.map(u => getUserPhoto(u)));
+      container.innerHTML = '';
+      recs.forEach(r => container.appendChild(makeVideoReel(r)));
       cache.explore = true;
     } catch(e) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:#a8a8a8">Could not load explore feed</div>';
+      container.innerHTML = '<section class="reel" style="justify-content:center"><div style="text-align:center;padding:40px;color:#a8a8a8">Could not load explore feed</div></section>';
     }
   }
 
@@ -1360,78 +1384,47 @@ if (localStorage.getItem('r_logged_in')) {
     const website = userData.website || '';
     const initial = username[0].toUpperCase();
 
+    // Remember this user's photo so their post reels render the avatar.
+    userPhotoCache[username] = photoURL;
+
+    const actions = isOwn
+      ? `<button class="profile-edit-btn" onclick="openEditProfile()">Edit profile</button>
+         <button class="profile-share-btn" onclick="shareProfile('${username}')">Share</button>
+         <button class="profile-settings-btn" onclick="openSettings()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>`
+      : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''}" id="profile-follow-action" onclick="profileToggleFollow('${username}',this)">${isFollowing ? 'Following' : 'Follow'}</button>
+         <button class="profile-share-btn" onclick="shareProfile('${username}')">Share</button>`;
+
     el.innerHTML = `
-      <div class="profile-header">
-        <div class="profile-ava-wrap">
-          <div class="profile-ava-ring">
-            <div class="profile-ava">${photoURL ? `<img src="${photoURL}" alt="${username}">` : initial}</div>
-          </div>
+      <section class="reel reel-profile"><div class="reel-scroll">
+        <div class="rp-top">
+          <div class="profile-ava-ring"><div class="profile-ava">${photoURL ? `<img src="${photoURL}" alt="${username}">` : initial}</div></div>
+          <div class="rp-uname">${username}</div>
+          <div class="rp-name">${displayName}</div>
+          ${bio ? `<div class="rp-bio">${bio}</div>` : ''}
+          ${website ? `<div class="rp-web"><a href="${website}" target="_blank">${website.replace(/^https?:\/\//, '')}</a></div>` : ''}
+          ${!isOwn && mutuals.length > 0 ? `<div class="profile-mutual" style="margin-top:8px">Followed by <b>${mutuals[0]}</b>${mutuals.length > 1 ? ` + ${mutuals.length - 1} more` : ''}</div>` : ''}
         </div>
-        <div class="profile-info">
-          <div class="profile-top">
-            <span class="profile-uname">${username}</span>
-            ${isOwn
-              ? `<button class="profile-edit-btn" onclick="openEditProfile()">Edit profile</button>
-                 <button class="profile-share-btn" onclick="shareProfile('${username}')">Share profile</button>
-                 <button class="profile-settings-btn" onclick="openSettings()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>`
-              : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''}" id="profile-follow-action" onclick="profileToggleFollow('${username}',this)">${isFollowing ? 'Following' : 'Follow'}</button>
-                 <button class="profile-share-btn" onclick="shareProfile('${username}')">Share</button>`
-            }
-          </div>
-          <div class="profile-stats">
-            <div class="profile-stat"><b>${posts.length}</b> posts</div>
-            <div class="profile-stat"><b>${followersCount}</b> followers</div>
-            <div class="profile-stat"><b>${followingCount}</b> following</div>
-          </div>
-          <div class="profile-name">${displayName}</div>
-          ${bio ? `<div class="profile-bio">${bio}</div>` : ''}
-          ${website ? `<div class="profile-website"><a href="${website}" target="_blank">${website.replace(/^https?:\/\//, '')}</a></div>` : ''}
-          ${!isOwn && mutuals.length > 0 ? `<div class="profile-mutual">Followed by <b>${mutuals[0]}</b>${mutuals.length > 1 ? ` + ${mutuals.length - 1} more` : ''}</div>` : ''}
+        <div class="rp-stats">
+          <div><b>${posts.length}</b><span>posts</span></div>
+          <div><b>${followersCount}</b><span>followers</span></div>
+          <div><b>${followingCount}</b><span>following</span></div>
         </div>
-      </div>
-      ${isOwn ? `
-        <div class="profile-highlights">
-          <div class="highlight-item">
-            <div class="highlight-circle"><svg width="24" height="24" fill="none" stroke="#8e8e8e" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-            <div class="highlight-name">New</div>
-          </div>
-        </div>
-      ` : ''}
-      <div class="profile-tabs">
-        <button class="profile-tab active" onclick="switchProfileTab('posts',this)">
-          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="1" y="1" width="9" height="9"/><rect x="14" y="1" width="9" height="9"/><rect x="1" y="14" width="9" height="9"/><rect x="14" y="14" width="9" height="9"/></svg> POSTS
-        </button>
-        <button class="profile-tab" onclick="switchProfileTab('saved',this)">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> SAVED
-        </button>
-      </div>
-      <div id="profile-posts-grid">
-      ${posts.length ? `
-        <div class="profile-grid">
-          ${posts.map(p => `
-            <div class="profile-grid-item" onclick="window.open('https://youtube.com/watch?v=${p.videoId}','_blank')">
-              <img src="https://img.youtube.com/vi/${p.videoId}/mqdefault.jpg" alt="" loading="lazy">
-              <div class="grid-overlay"><svg class="grid-play" width="40" height="40" fill="white" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-            </div>
-          `).join('')}
-        </div>
-      ` : `
-        <div class="profile-empty">
-          <div class="profile-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><polygon points="10 8 16 12 10 16" fill="#262626" stroke="none"/></svg></div>
-          <h3>${isOwn ? 'Share Videos' : 'No Posts Yet'}</h3>
-          <p>${isOwn ? 'When you share recommendations, they will appear on your profile.' : 'This user hasn\'t shared any recommendations yet.'}</p>
-        </div>
-      `}
-      </div>
-      <div id="profile-saved-grid" style="display:none">
-        <div class="profile-empty">
-          <div class="profile-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></div>
-          <h3>Save</h3>
-          <p>Save photos and videos that you want to see again.</p>
-        </div>
-      </div>
+        <div class="rp-actions">${actions}</div>
+        ${posts.length ? `<div class="rp-hint"><svg width="22" height="22" fill="none" stroke="#c7c7c7" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Swipe up to watch ${posts.length} recommendation${posts.length !== 1 ? 's' : ''}</div>` : ''}
+      </div></section>
+      <div id="profile-reels"></div>
     `;
-    cache.profiles[username] = el.innerHTML;
+
+    const reelsC = el.querySelector('#profile-reels');
+    if (posts.length) {
+      posts.forEach(p => reelsC.appendChild(makeVideoReel({ ...p, username })));
+    } else {
+      reelsC.innerHTML = `<section class="reel" style="justify-content:center"><div class="profile-empty">
+        <div class="profile-empty-icon"><svg width="28" height="28" fill="none" stroke="#262626" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><polygon points="10 8 16 12 10 16" fill="#262626" stroke="none"/></svg></div>
+        <h3>${isOwn ? 'Share Videos' : 'No Posts Yet'}</h3>
+        <p>${isOwn ? 'When you share recommendations, they will appear on your profile.' : 'This user hasn\'t shared any recommendations yet.'}</p>
+      </div></section>`;
+    }
     } catch(e) {
       console.error('loadProfile error:', e);
       el.innerHTML = '<div style="text-align:center;padding:60px;color:#8e8e8e">Could not load profile. Try again.</div>';
@@ -1507,16 +1500,13 @@ if (localStorage.getItem('r_logged_in')) {
 
   window.viewProfile = (username, pushState = true) => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-    document.getElementById('tab-profile').classList.add('on');
+    const tabEl = document.getElementById('tab-profile');
+    tabEl.classList.add('on');
+    tabEl.scrollTop = 0; // start on the profile info card
     document.querySelectorAll('.bottomnav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'profile'));
     document.querySelectorAll('.sidebar-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'profile'));
     if (pushState) history.pushState({ tab: 'profile', username }, '', '/' + username);
-    // Use cached profile HTML if available
-    if (cache.profiles[username]) {
-      document.getElementById('profile-content').innerHTML = cache.profiles[username];
-    } else {
-      loadProfile(username);
-    }
+    loadProfile(username);
   };
 
   /* ─── URL ROUTING ─── */
@@ -1547,12 +1537,13 @@ if (localStorage.getItem('r_logged_in')) {
     }
   });
 
-  /* ─── PULL TO REFRESH ─── */
+  /* ─── PULL TO REFRESH (feed special card only) ─── */
   let ptrStartY = 0, ptrActive = false;
   const mainArea = document.getElementById('main-area');
   if (mainArea) {
     mainArea.addEventListener('touchstart', (e) => {
-      if (mainArea.scrollTop === 0) {
+      const feed = document.getElementById('tab-feed');
+      if (feed.classList.contains('on') && feed.scrollTop <= 0) {
         ptrStartY = e.touches[0].clientY;
         ptrActive = true;
       }
@@ -1574,9 +1565,10 @@ if (localStorage.getItem('r_logged_in')) {
       const indicator = document.getElementById('ptr-indicator');
       if (indicator && indicator.style.display === 'block') {
         indicator.textContent = 'Refreshing...';
+        cache.feed = null;
         loadFeed();
         loadStories();
-        setTimeout(() => { indicator.style.display = 'none'; }, 1000);
+        setTimeout(() => { indicator.style.display = 'none'; indicator.textContent = 'Pull to refresh'; }, 1000);
       }
     });
   }
